@@ -86,6 +86,11 @@
                     <span class="font-medium">數據自動連動中</span>
                 </div>
                 
+                <button onclick="openAddProductModal()" class="text-xs bg-brand-accent text-white font-bold px-3 py-1.5 rounded-lg shadow-sm hover:bg-opacity-90 transition flex items-center space-x-1">
+                    <span>➕</span>
+                    <span>上架新商品</span>
+                </button>
+
                 <a id="link-to-frontend" href="index.html" target="_blank" class="text-xs text-brand-brown hover:text-brand-accent font-medium flex items-center space-x-1 bg-brand-card px-3 py-1.5 rounded-lg border border-brand-cream transition">
                     <span>🛒</span>
                     <span>開啟前台官網</span>
@@ -236,6 +241,83 @@
         </div>
 
     </main>
+
+    <!-- Add Product Modal -->
+    <div id="add-product-modal" class="fixed inset-0 bg-black/40 z-50 hidden flex items-center justify-center p-4 overflow-y-auto">
+        <div class="bg-white rounded-2xl max-w-lg w-full p-6 md:p-8 shadow-2xl relative border border-brand-cream my-8">
+            <button onclick="closeAddProductModal()" class="absolute top-4 right-4 text-gray-400 hover:text-brand-brown text-xl">✕</button>
+            <div class="border-b pb-3 mb-5">
+                <h3 class="text-xl font-serif font-bold text-brand-brown flex items-center gap-2">
+                    <span>🛍️</span>
+                    <span>上架全新商品至官網</span>
+                </h3>
+                <p class="text-xs text-brand-muted mt-1">填寫商品資訊，發布後將同步連動至前台官網 (index.html) 與庫存系統 (inventory.html)</p>
+            </div>
+
+            <form onsubmit="handleAddProductSubmit(event)" class="space-y-4 text-xs">
+                <div>
+                    <label class="block font-medium mb-1 text-gray-700">商品名稱 *</label>
+                    <input type="text" id="new-prod-name" placeholder="例如：【客製刺繡】法式蕾絲親膚口水巾" required
+                           class="w-full px-3 py-2 border border-brand-cream rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-accent">
+                </div>
+
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block font-medium mb-1 text-gray-700">銷售單價 (NT$) *</label>
+                        <input type="number" id="new-prod-price" placeholder="450" min="0" required
+                               class="w-full px-3 py-2 border border-brand-cream rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-accent">
+                    </div>
+                    <div>
+                        <label class="block font-medium mb-1 text-gray-700">初始庫存數量 *</label>
+                        <input type="number" id="new-prod-stock" placeholder="20" min="0" required
+                               class="w-full px-3 py-2 border border-brand-cream rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-accent">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block font-medium mb-1 text-gray-700">商品分類 *</label>
+                        <select id="new-prod-category" class="w-full px-3 py-2 border border-brand-cream rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-accent bg-white">
+                            <option value="bib">口水巾</option>
+                            <option value="gift">彌月禮盒</option>
+                            <option value="accessories">奶嘴夾與配件</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block font-medium mb-1 text-gray-700">商品特色標籤</label>
+                        <input type="text" id="new-prod-badge" placeholder="例如：新品上架 / 熱銷"
+                               class="w-full px-3 py-2 border border-brand-cream rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-accent">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block font-medium mb-1 text-gray-700">代表圖示 / Emojis</label>
+                    <select id="new-prod-icon" class="w-full px-3 py-2 border border-brand-cream rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-accent bg-white text-base">
+                        <option value="🧣">🧣 口水巾 / 圍脖</option>
+                        <option value="🎁">🎁 經典彌月禮盒</option>
+                        <option value="📎">📎 手作奶嘴夾</option>
+                        <option value="🎀">🎀 蕾絲髮帶 / 配件</option>
+                        <option value="🐰">🐰 親膚安撫手帕</option>
+                        <option value="👼">👼 天使翅膀造型</option>
+                        <option value="🍼">🍼 嬰幼兒日常用品</option>
+                        <option value="🧸">🧸 熊熊紀念組</option>
+                    </select>
+                </div>
+
+                <div class="pt-2">
+                    <button type="submit" class="w-full bg-brand-accent text-white py-3 rounded-xl font-bold hover:bg-opacity-90 transition shadow-md flex items-center justify-center gap-2">
+                        <span>✨</span>
+                        <span>確認無誤，正式發布上架</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast-msg" class="fixed bottom-4 right-4 bg-brand-brown text-white px-4 py-3 rounded-xl text-xs shadow-xl hidden transition-all duration-300 z-50">
+        ✨ 商品已成功上架！前台官網與庫存系統已同步更新。
+    </div>
 
     <script>
         let revenueChart = null;
@@ -493,6 +575,76 @@
                 localStorage.removeItem('coteacote_orders');
                 loadDashboardData();
             }
+        }
+
+        // --- 商品上架功能與彈窗控制 ---
+        function openAddProductModal() {
+            document.getElementById('add-product-modal').classList.remove('hidden');
+        }
+
+        function closeAddProductModal() {
+            document.getElementById('add-product-modal').classList.add('hidden');
+        }
+
+        function handleAddProductSubmit(e) {
+            e.preventDefault();
+            const name = document.getElementById('new-prod-name').value.trim();
+            const price = parseInt(document.getElementById('new-prod-price').value) || 0;
+            const stock = parseInt(document.getElementById('new-prod-stock').value) || 0;
+            const category = document.getElementById('new-prod-category').value;
+            const badge = document.getElementById('new-prod-badge').value.trim() || "新品上架";
+            const icon = document.getElementById('new-prod-icon').value;
+
+            // 1. 取得現有庫存與商品清單
+            const defaultProducts = [
+                { id: 1, name: "【客製刺繡】涼夏風兒輕輕吹口水巾", price: 430, category: "bib", badge: "熱銷組", icon: "🧣", stock: 15 },
+                { id: 2, name: "【客製刺繡-3件組】我和寶寶的第一場初雪彌月禮盒", price: 1290, category: "gift", badge: "經典禮盒", icon: "🎁", stock: 8 },
+                { id: 3, name: "【客製刺繡】花海野餐蕾絲荷葉奶嘴夾", price: 170, category: "accessories", badge: "手作限定", icon: "📎", stock: 25 },
+                { id: 4, name: "優雅公主復古蕾絲髮帶 3件組", price: 190, category: "accessories", badge: "人氣單品", icon: "🎀", stock: 30 },
+                { id: 5, name: "【客製刺繡】我愛我的生日兔子寶寶六層紗手帕", price: 210, category: "bib", badge: "親膚推薦", icon: "🐰", stock: 6 },
+                { id: 6, name: "【客製刺繡-2件組】小天使與小惡魔立體翅膀口水巾", price: 830, category: "gift", badge: "彌月首選", icon: "👼", stock: 3 }
+            ];
+
+            let inventory = defaultProducts;
+            try {
+                const stored = localStorage.getItem('coteacote_inventory');
+                if (stored) inventory = JSON.parse(stored);
+            } catch(err) { inventory = defaultProducts; }
+
+            // 2. 生成新商品 ID
+            const newId = inventory.length > 0 ? Math.max(...inventory.map(p => Number(p.id) || 0)) + 1 : 1;
+
+            const newProduct = {
+                id: newId,
+                name: name,
+                price: price,
+                category: category,
+                badge: badge,
+                icon: icon,
+                stock: stock
+            };
+
+            inventory.unshift(newProduct);
+
+            // 3. 寫回 localStorage 並廣播通知其他分頁（官網 index.html 與 庫存管理 inventory.html）
+            localStorage.setItem('coteacote_inventory', JSON.stringify(inventory));
+            window.dispatchEvent(new Event('storage'));
+
+            // 4. 重置表單與關閉彈窗
+            e.target.reset();
+            closeAddProductModal();
+
+            // 5. 提示成功訊息
+            showToast(`成功上架商品「${name}」！官網 (index.html) 已同步顯示該商品。`);
+        }
+
+        function showToast(msg) {
+            const toast = document.getElementById('toast-msg');
+            toast.innerText = `✨ ${msg}`;
+            toast.classList.remove('hidden');
+            setTimeout(() => {
+                toast.classList.add('hidden');
+            }, 3000);
         }
     </script>
 </body>
