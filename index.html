@@ -6,6 +6,7 @@
     <title>CÔTE À CÔTE | 嬰幼兒織品與客製化刺繡手作禮盒</title>
     <!-- Google Fonts & Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@500;700&family=Klee+One:wght@400;600&family=Noto+Serif+TC:wght@400;600;700&family=Yeon+Sung&family=Zen+Maru+Gothic:wght@400;500;700&display=swap" rel="stylesheet">
     <script>
         tailwind.config = {
@@ -15,7 +16,7 @@
                         brand: {
                             bg: '#FDFBF7',
                             card: '#FAF6F0',
-                            accent: '#8F9779', // Sage green
+                            accent: '#8F9779',
                             brown: '#6D5B4F',
                             muted: '#9A8C73',
                             cream: '#EAE2D6'
@@ -61,13 +62,7 @@
                 <a href="#about" class="hover:text-brand-accent transition">關於我們</a>
             </nav>
 
-            <div class="flex items-center space-x-4">
-                <!-- Member Account Button -->
-                <button onclick="toggleMemberModal()" class="flex items-center space-x-1 text-[#6D5B4F] hover:text-brand-accent text-sm font-medium transition">
-                    <span id="member-icon">👤</span>
-                    <span id="member-nav-text" class="hidden sm:inline">會員登入</span>
-                </button>
-
+            <div class="flex items-center space-x-2 sm:space-x-3">
                 <button onclick="toggleCart()" class="relative p-2 text-[#6D5B4F] hover:text-brand-accent">
                     🛒
                     <span id="cart-count" class="absolute -top-1 -right-1 bg-brand-accent text-white text-xs w-5 h-5 rounded-full flex items-center justify-center font-bold">0</span>
@@ -163,7 +158,7 @@
     <section id="products" class="max-w-6xl mx-auto px-4 py-8">
         <div class="text-center mb-8">
             <h2 class="text-2xl font-serif font-bold text-brand-brown">熱門手作商品</h2>
-            <p class="text-xs text-brand-muted mt-1">選用溫和無毒面料，給肌膚最細緻的呵護</p>
+            <p class="text-xs text-brand-muted mt-1">選用溫和無毒面料，即時顯示庫存剩餘數量</p>
         </div>
 
         <!-- Filter Tabs -->
@@ -211,124 +206,6 @@
         </div>
     </footer>
 
-    <!-- Member Modal -->
-    <div id="member-modal" class="fixed inset-0 bg-black/40 z-50 hidden flex items-center justify-center p-4">
-        <div class="bg-white rounded-2xl max-w-lg w-full p-6 md:p-8 shadow-2xl relative border border-brand-cream max-h-[90vh] overflow-y-auto">
-            <button onclick="toggleMemberModal()" class="absolute top-4 right-4 text-gray-400 hover:text-brand-brown text-xl">✕</button>
-
-            <!-- State 1: Guest (Login / Register Tabs) -->
-            <div id="member-guest-view">
-                <div class="flex border-b border-brand-cream mb-6 text-sm font-serif">
-                    <button id="tab-login-btn" onclick="switchAuthTab('login')" class="pb-2 px-4 border-b-2 border-brand-accent text-brand-brown font-bold">會員登入</button>
-                    <button id="tab-register-btn" onclick="switchAuthTab('register')" class="pb-2 px-4 text-gray-400 hover:text-brand-brown">免費註冊</button>
-                </div>
-
-                <!-- Login Form -->
-                <form id="login-form" onsubmit="handleLogin(event)" class="space-y-4">
-                    <div>
-                        <label class="block text-xs text-brand-brown font-medium mb-1">電子信箱 / 手機號碼</label>
-                        <input type="text" id="login-email" placeholder="example@email.com" required
-                               class="w-full px-4 py-2 border border-brand-cream rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-accent">
-                    </div>
-                    <div>
-                        <label class="block text-xs text-brand-brown font-medium mb-1">密碼</label>
-                        <input type="password" id="login-password" placeholder="••••••••" required
-                               class="w-full px-4 py-2 border border-brand-cream rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-accent">
-                    </div>
-                    <div class="flex items-center justify-between text-xs">
-                        <label class="flex items-center text-gray-500">
-                            <input type="checkbox" class="mr-1 rounded border-brand-cream text-brand-accent focus:ring-brand-accent"> 記住我
-                        </label>
-                        <a href="#" class="text-brand-muted hover:underline">忘記密碼？</a>
-                    </div>
-                    <button type="submit" class="w-full bg-brand-accent text-white py-2.5 rounded-lg text-sm font-medium hover:bg-opacity-90 transition">
-                        立即登入
-                    </button>
-                    
-                    <div class="pt-2 text-center">
-                        <p class="text-[11px] text-gray-400 mb-2">— 或使用第三方帳號登入 —</p>
-                        <button type="button" onclick="handleQuickLogin('LINE 帳號')" class="w-full bg-[#06C755] text-white py-2 rounded-lg text-xs font-medium hover:bg-opacity-90 transition flex items-center justify-center gap-2">
-                            💬 使用 LINE 快速登入
-                        </button>
-                    </div>
-                </form>
-
-                <!-- Register Form -->
-                <form id="register-form" onsubmit="handleRegister(event)" class="space-y-4 hidden">
-                    <div>
-                        <label class="block text-xs text-brand-brown font-medium mb-1">會員姓名 / 稱呼</label>
-                        <input type="text" id="reg-name" placeholder="例如：林小美" required
-                               class="w-full px-4 py-2 border border-brand-cream rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-accent">
-                    </div>
-                    <div>
-                        <label class="block text-xs text-brand-brown font-medium mb-1">電子信箱</label>
-                        <input type="email" id="reg-email" placeholder="example@email.com" required
-                               class="w-full px-4 py-2 border border-brand-cream rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-accent">
-                    </div>
-                    <div>
-                        <label class="block text-xs text-brand-brown font-medium mb-1">設定密碼</label>
-                        <input type="password" id="reg-password" placeholder="6 位數以上密碼" required minlength="6"
-                               class="w-full px-4 py-2 border border-brand-cream rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-accent">
-                    </div>
-                    <div>
-                        <label class="block text-xs text-brand-brown font-medium mb-1">寶寶預產期 / 生日（可獲得彌月禮金券）</label>
-                        <input type="date" id="reg-baby-date"
-                               class="w-full px-4 py-2 border border-brand-cream rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-accent">
-                    </div>
-                    <button type="submit" class="w-full bg-brand-brown text-white py-2.5 rounded-lg text-sm font-medium hover:bg-opacity-90 transition">
-                        完成註冊並領取 $100 購物金
-                    </button>
-                </form>
-            </div>
-
-            <!-- State 2: Logged In Dashboard -->
-            <div id="member-logged-view" class="hidden space-y-6">
-                <div class="flex items-center justify-between border-b pb-4 border-brand-cream">
-                    <div class="flex items-center space-x-3">
-                        <div class="w-12 h-12 rounded-full bg-brand-cream flex items-center justify-center text-xl text-brand-brown font-bold font-serif" id="user-avatar-initial">
-                            C
-                        </div>
-                        <div>
-                            <h3 class="font-serif font-bold text-brand-brown text-base" id="user-display-name">媽媽小美</h3>
-                            <p class="text-xs text-brand-muted" id="user-display-email">user@example.com</p>
-                        </div>
-                    </div>
-                    <button onclick="handleLogout()" class="text-xs text-gray-400 hover:text-brand-brown border border-gray-200 px-3 py-1 rounded-full">
-                        登出
-                    </button>
-                </div>
-
-                <!-- VIP Perks / Vouchers -->
-                <div class="bg-brand-card p-4 rounded-xl border border-brand-cream flex justify-between items-center text-xs">
-                    <div>
-                        <p class="text-brand-muted">尊榮專屬福利</p>
-                        <p class="font-bold text-brand-brown mt-0.5">✨ 新生兒彌月專屬優惠券 x 1 (滿 $1,000 折 $100)</p>
-                    </div>
-                    <span class="bg-brand-accent text-white px-2 py-1 rounded text-[10px]">可使用</span>
-                </div>
-
-                <!-- Saved Embroidery Names -->
-                <div>
-                    <div class="flex justify-between items-center mb-2">
-                        <h4 class="font-serif font-bold text-brand-brown text-xs">🧵 常用寶寶刺繡預設清單</h4>
-                        <button onclick="promptAddEmbroideryName()" class="text-[11px] text-brand-accent hover:underline">+ 新增名字</button>
-                    </div>
-                    <div id="saved-names-list" class="flex flex-wrap gap-2 text-xs">
-                        <!-- Populated by JS -->
-                    </div>
-                </div>
-
-                <!-- Order History -->
-                <div>
-                    <h4 class="font-serif font-bold text-brand-brown text-xs mb-3">📦 近期客製訂單查詢</h4>
-                    <div id="member-orders-list" class="space-y-3 max-h-40 overflow-y-auto pr-1">
-                        <!-- Populated by JS -->
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
     <!-- Cart Slide-over Modal -->
     <div id="cart-modal" class="fixed inset-0 bg-black/40 z-50 hidden flex justify-end">
         <div class="w-full max-w-md bg-white h-full p-6 flex flex-col justify-between shadow-2xl">
@@ -362,7 +239,7 @@
             <div id="checkout-form-view">
                 <div class="border-b pb-4 mb-6">
                     <h3 class="text-xl font-serif font-bold text-brand-brown">🛍️ 結帳與支付</h3>
-                    <p class="text-xs text-brand-muted mt-1">請選擇您的寄送方式與付款資訊</p>
+                    <p class="text-xs text-brand-muted mt-1">付款成功後，系統將自動扣減對應商品庫存</p>
                 </div>
 
                 <form id="checkout-form" onsubmit="handleOrderSubmit(event)" class="space-y-6 text-xs">
@@ -392,7 +269,6 @@
                     <div class="space-y-3">
                         <h4 class="font-serif font-bold text-brand-brown text-sm border-b pb-1">2. 選擇寄送方式</h4>
                         <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                            <!-- 7-11 Option -->
                             <label id="ship-opt-711" onclick="selectShipping('711')" class="border-2 border-brand-accent bg-brand-bg rounded-xl p-3 cursor-pointer transition flex flex-col justify-between">
                                 <div class="flex items-center justify-between">
                                     <span class="font-bold text-brand-brown">🏪 7-11 超商取貨</span>
@@ -401,7 +277,6 @@
                                 <p class="text-[11px] text-gray-500 mt-2">運費 NT$ 60 (滿 $1,500 免運)</p>
                             </label>
 
-                            <!-- FamilyMart Option -->
                             <label id="ship-opt-family" onclick="selectShipping('family')" class="border border-brand-cream rounded-xl p-3 cursor-pointer transition flex flex-col justify-between hover:border-brand-accent">
                                 <div class="flex items-center justify-between">
                                     <span class="font-bold text-brand-brown">🏪 全家 超商取貨</span>
@@ -410,7 +285,6 @@
                                 <p class="text-[11px] text-gray-500 mt-2">運費 NT$ 60 (滿 $1,500 免運)</p>
                             </label>
 
-                            <!-- Home Delivery Option -->
                             <label id="ship-opt-home" onclick="selectShipping('home')" class="border border-brand-cream rounded-xl p-3 cursor-pointer transition flex flex-col justify-between hover:border-brand-accent">
                                 <div class="flex items-center justify-between">
                                     <span class="font-bold text-brand-brown">🚚 黑貓宅配到府</span>
@@ -418,29 +292,6 @@
                                 </div>
                                 <p class="text-[11px] text-gray-500 mt-2">運費 NT$ 100 (滿 $2,000 免運)</p>
                             </label>
-                        </div>
-
-                        <!-- Store Selector Simulation for 7-11 / FamilyMart -->
-                        <div id="convenience-store-detail" class="bg-brand-card p-3 rounded-lg border border-brand-cream space-y-2">
-                            <div class="flex justify-between items-center">
-                                <span class="font-bold text-brand-brown" id="store-title-label">7-11 門市資訊：</span>
-                                <button type="button" onclick="simulateSelectStore()" class="bg-brand-brown text-white px-3 py-1 rounded text-[11px] hover:bg-opacity-90">
-                                    🗺️ 模擬地圖選擇門市
-                                </button>
-                            </div>
-                            <div class="grid grid-cols-2 gap-2">
-                                <input type="text" id="chk-store-name" placeholder="門市名稱 (如：信義門市)" required value="信義門市"
-                                       class="px-3 py-1.5 border border-brand-cream rounded bg-white">
-                                <input type="text" id="chk-store-id" placeholder="門市店號 (如：991234)" required value="991234"
-                                       class="px-3 py-1.5 border border-brand-cream rounded bg-white">
-                            </div>
-                        </div>
-
-                        <!-- Address Field for Home Delivery -->
-                        <div id="home-address-detail" class="hidden">
-                            <label class="block font-medium mb-1 text-gray-700">宅配地址 *</label>
-                            <input type="text" id="chk-address" placeholder="請輸入縣市、鄉鎮市區及詳細地址"
-                                   class="w-full px-3 py-2 border border-brand-cream rounded-lg focus:outline-none">
                         </div>
                     </div>
 
@@ -457,31 +308,9 @@
                                 <input type="radio" name="payment" value="linepay" class="text-brand-accent">
                             </label>
                         </div>
-
-                        <!-- Credit Card Input Details -->
-                        <div id="credit-card-details" class="bg-brand-card p-4 rounded-xl border border-brand-cream space-y-3">
-                            <div>
-                                <label class="block font-medium mb-1 text-gray-700">信用卡號碼 (僅供測試，請勿輸入真實卡號)</label>
-                                <input type="text" placeholder="4311 •••• •••• 9988" maxlength="19" value="4311 9527 8888 9988" required
-                                       class="w-full px-3 py-2 border border-brand-cream rounded-lg bg-white tracking-widest font-mono">
-                            </div>
-                            <div class="grid grid-cols-2 gap-3">
-                                <div>
-                                    <label class="block font-medium mb-1 text-gray-700">有效月/年 (MM/YY)</label>
-                                    <input type="text" placeholder="12/28" maxlength="5" value="12/28" required
-                                           class="w-full px-3 py-2 border border-brand-cream rounded-lg bg-white font-mono">
-                                </div>
-                                <div>
-                                    <label class="block font-medium mb-1 text-gray-700">背面末三碼 (CVC)</label>
-                                    <input type="password" placeholder="123" maxlength="3" value="123" required
-                                           class="w-full px-3 py-2 border border-brand-cream rounded-lg bg-white font-mono">
-                                </div>
-                            </div>
-                            <p class="text-[10px] text-gray-400">🔒 採用 256-bit SSL 加密傳輸，安全保護您的交易資訊。</p>
-                        </div>
                     </div>
 
-                    <!-- Step 4: Order Summary Calculation -->
+                    <!-- Step 4: Order Summary -->
                     <div class="bg-brand-card p-4 rounded-xl border border-brand-cream space-y-2">
                         <div class="flex justify-between text-gray-600">
                             <span>商品小計：</span>
@@ -497,7 +326,6 @@
                         </div>
                     </div>
 
-                    <!-- Submit Button -->
                     <button type="submit" class="w-full bg-brand-accent text-white py-3 rounded-xl text-sm font-bold hover:bg-opacity-90 transition shadow-md">
                         🔒 確認付費並送出客製訂單
                     </button>
@@ -508,121 +336,57 @@
             <div id="checkout-success-view" class="hidden text-center space-y-4 py-8">
                 <div class="text-5xl">🎉</div>
                 <h3 class="text-2xl font-serif font-bold text-brand-brown">感謝您的訂購！</h3>
-                <p class="text-xs text-gray-600">訂單編號：<span id="success-order-id" class="font-bold text-brand-accent">COT-20260802</span></p>
+                <p class="text-xs text-gray-600">訂單編號：<span id="success-order-id" class="font-bold text-brand-accent">COT-20260807</span></p>
                 <div class="bg-brand-card p-4 rounded-xl border border-brand-cream text-xs text-left space-y-2 max-w-md mx-auto">
                     <p><strong>取件方式：</strong> <span id="success-shipping-type">7-11 超商取貨</span></p>
-                    <p><strong>付款方式：</strong> <span id="success-payment-type">信用卡一次付清 (已扣款)</span></p>
-                    <p><strong>刺繡製作天數：</strong> 約 3~5 個工作天</p>
+                    <p><strong>付款方式：</strong> <span id="success-payment-type">信用卡一次付清 (授權成功)</span></p>
+                    <p>💡 庫存數量已同步扣除，並連動通知至庫存管理系統 (inventory.html)</p>
                 </div>
-                <p class="text-xs text-brand-muted">我們會儘快為您的寶貝完成精致的刺繡手作！您可隨時至「會員專區」查看進度。</p>
-                <button onclick="finishCheckoutProcess()" class="bg-brand-brown text-white px-8 py-2.5 rounded-full text-xs font-bold hover:bg-opacity-90">
-                    返回官網首頁
+                <button onclick="closeCheckoutModal()" class="bg-brand-brown text-white px-8 py-2.5 rounded-full text-xs font-bold hover:bg-opacity-90">
+                    返回官網繼續購物
                 </button>
             </div>
         </div>
-    </div>
+    </div
 
-    <!-- JavaScript Interactions -->
+    <!-- JavaScript Interactions & Data Sync -->
     <script>
-        const products = [
-            { id: 1, name: "【客製刺繡】涼夏風兒輕輕吹口水巾", price: 430, category: "bib", badge: "熱銷組", icon: "🧣" },
-            { id: 2, name: "【客製刺繡-3件組】我和寶寶的第一場初雪彌月禮盒", price: 1290, category: "gift", badge: "經典禮盒", icon: "🎁" },
-            { id: 3, name: "【客製刺繡】花海野餐蕾絲荷葉奶嘴夾", price: 170, category: "accessories", badge: "手作限定", icon: "📎" },
-            { id: 4, name: "優雅公主復古蕾絲髮帶 3件組", price: 190, category: "accessories", badge: "人氣單品", icon: "🎀" },
-            { id: 5, name: "【客製刺繡】我愛我的生日兔子寶寶六層紗手帕", price: 210, category: "bib", badge: "親膚推薦", icon: "🐰" },
-            { id: 6, name: "【客製刺繡-2件組】小天使與小惡魔立體翅膀口水巾", price: 830, category: "gift", badge: "彌月首選", icon: "👼" }
+        // 預設商品清單與預設庫存
+        const defaultProducts = [
+            { id: 1, name: "【客製刺繡】涼夏風兒輕輕吹口水巾", price: 430, category: "bib", badge: "熱銷組", icon: "🧣", stock: 15 },
+            { id: 2, name: "【客製刺繡-3件組】我和寶寶的第一場初雪彌月禮盒", price: 1290, category: "gift", badge: "經典禮盒", icon: "🎁", stock: 8 },
+            { id: 3, name: "【客製刺繡】花海野餐蕾絲荷葉奶嘴夾", price: 170, category: "accessories", badge: "手作限定", icon: "📎", stock: 25 },
+            { id: 4, name: "優雅公主復古蕾絲髮帶 3件組", price: 190, category: "accessories", badge: "人氣單品", icon: "🎀", stock: 30 },
+            { id: 5, name: "【客製刺繡】我愛我的生日兔子寶寶六層紗手帕", price: 210, category: "bib", badge: "親膚推薦", icon: "🐰", stock: 6 },
+            { id: 6, name: "【客製刺繡-2件組】小天使與小惡魔立體翅膀口水巾", price: 830, category: "gift", badge: "彌月首選", icon: "👼", stock: 3 }
         ];
 
         let cart = [];
-        let currentUser = null;
-        let savedEmbroideryNames = ["Baby Charlotte", "Baby Oliver", "寶寶小美"];
-        let mockOrders = [
-            { id: "COT-20260101", date: "2026-08-01", items: "【客製刺繡】涼夏風兒輕輕吹口水巾", total: 490, status: "已出貨 🚚" }
-        ];
-
         let currentShipping = '711';
         let currentPayment = 'credit';
+        let currentCategoryFilter = 'all';
 
-        // 刺繡客製設定狀態
-        let currentLang = 'en'; // 'en' | 'zh'
-        let currentFont = 'sauber'; // 'sauber' | 'yeonsung' | 'handwriting' | 'wawa'
-
-        const fontCssClasses = {
-            'sauber': 'font-sauber-script',
-            'yeonsung': 'font-bm-yeonsung',
-            'handwriting': 'font-handwriting-tc',
-            'wawa': 'font-wawa-tc'
-        };
-
-        const fontNamesMap = {
-            'sauber': 'Sauber Script',
-            'yeonsung': 'BM Yeonsung',
-            'handwriting': '手札體',
-            'wawa': '娃娃體'
-        };
-
-        function switchEmbroideryLang(lang) {
-            currentLang = lang;
-            const btnEn = document.getElementById('lang-btn-en');
-            const btnZh = document.getElementById('lang-btn-zh');
-            const groupEn = document.getElementById('fonts-group-en');
-            const groupZh = document.getElementById('fonts-group-zh');
-            const inputLabel = document.getElementById('input-label-text');
-            const inputEl = document.getElementById('custom-text-input');
-
-            if (lang === 'en') {
-                btnEn.className = "px-5 py-2 rounded-full text-xs font-bold border-2 transition-all flex items-center gap-1.5 bg-brand-accent text-white border-brand-accent shadow-sm";
-                btnZh.className = "px-5 py-2 rounded-full text-xs font-bold border-2 transition-all flex items-center gap-1.5 bg-white text-brand-brown border-brand-cream hover:border-brand-accent";
-                groupEn.classList.remove('hidden');
-                groupZh.classList.add('hidden');
-                inputLabel.innerText = "請輸入寶寶英文姓名 / 生日：";
-                if (inputEl.value === '寶寶小美' || !inputEl.value) inputEl.value = 'Baby Name';
-                selectEmbroideryFont('sauber');
-            } else {
-                btnZh.className = "px-5 py-2 rounded-full text-xs font-bold border-2 transition-all flex items-center gap-1.5 bg-brand-accent text-white border-brand-accent shadow-sm";
-                btnEn.className = "px-5 py-2 rounded-full text-xs font-bold border-2 transition-all flex items-center gap-1.5 bg-white text-brand-brown border-brand-cream hover:border-brand-accent";
-                groupZh.classList.remove('hidden');
-                groupEn.classList.add('hidden');
-                inputLabel.innerText = "請輸入寶寶中文姓名 / 祝福語：";
-                if (inputEl.value === 'Baby Name' || !inputEl.value) inputEl.value = '寶寶小美';
-                selectEmbroideryFont('handwriting');
+        // 取得庫存資料庫
+        function getInventory() {
+            const stored = localStorage.getItem('coteacote_inventory');
+            if (stored) {
+                try { return JSON.parse(stored); } catch(e) {}
             }
+            localStorage.setItem('coteacote_inventory', JSON.stringify(defaultProducts));
+            return defaultProducts;
         }
 
-        function selectEmbroideryFont(fontKey) {
-            currentFont = fontKey;
-            
-            // 按鈕高亮顯示
-            const buttons = {
-                'sauber': document.getElementById('font-btn-sauber'),
-                'yeonsung': document.getElementById('font-btn-yeonsung'),
-                'handwriting': document.getElementById('font-btn-handwriting'),
-                'wawa': document.getElementById('font-btn-wawa')
-            };
+        // 頁面初始化與庫存監聽
+        window.addEventListener('DOMContentLoaded', () => {
+            renderProducts();
 
-            Object.keys(buttons).forEach(key => {
-                if (!buttons[key]) return;
-                if (key === fontKey) {
-                    buttons[key].classList.add('border-brand-accent', 'text-brand-brown', 'shadow-sm');
-                    buttons[key].classList.remove('border-brand-cream', 'text-gray-600');
-                } else {
-                    buttons[key].classList.remove('border-brand-accent', 'shadow-sm');
-                    buttons[key].classList.add('border-brand-cream', 'text-gray-600');
+            // 當管理者在 inventory.html 修改庫存時，前台自動即時更新
+            window.addEventListener('storage', (e) => {
+                if (e.key === 'coteacote_inventory') {
+                    renderProducts();
                 }
             });
-
-            // 更新預覽元素 Font Class
-            const previewEl = document.getElementById('embroidery-preview');
-            const tagInfo = document.getElementById('preview-tag-info');
-
-            // 移除全部字型 Class
-            Object.values(fontCssClasses).forEach(cls => previewEl.classList.remove(cls));
-            // 加入目標字型 Class
-            previewEl.classList.add(fontCssClasses[fontKey]);
-
-            tagInfo.innerText = `刺繡樣式模擬 (${fontNamesMap[fontKey]})`;
-            updatePreview(document.getElementById('custom-text-input').value);
-        }
+        });
 
         function showToast(msg) {
             const toast = document.createElement('div');
@@ -643,12 +407,6 @@
             }
             toggleCart();
             updateCheckoutAmounts();
-            
-            if (currentUser) {
-                document.getElementById('chk-name').value = currentUser.name || '';
-                document.getElementById('chk-email').value = currentUser.email || '';
-            }
-
             document.getElementById('checkout-form-view').classList.remove('hidden');
             document.getElementById('checkout-success-view').classList.add('hidden');
             document.getElementById('checkout-modal').classList.remove('hidden');
@@ -660,70 +418,16 @@
 
         function selectShipping(type) {
             currentShipping = type;
-            const opt711 = document.getElementById('ship-opt-711');
-            const optFamily = document.getElementById('ship-opt-family');
-            const optHome = document.getElementById('ship-opt-home');
-            const storeDetail = document.getElementById('convenience-store-detail');
-            const homeDetail = document.getElementById('home-address-detail');
-            const titleLabel = document.getElementById('store-title-label');
-
-            [opt711, optFamily, optHome].forEach(el => el.className = "border border-brand-cream rounded-xl p-3 cursor-pointer transition flex flex-col justify-between hover:border-brand-accent");
-
-            if (type === '711') {
-                opt711.className = "border-2 border-brand-accent bg-brand-bg rounded-xl p-3 cursor-pointer transition flex flex-col justify-between";
-                storeDetail.classList.remove('hidden');
-                homeDetail.classList.add('hidden');
-                titleLabel.innerText = "7-11 門市資訊：";
-            } else if (type === 'family') {
-                optFamily.className = "border-2 border-brand-accent bg-brand-bg rounded-xl p-3 cursor-pointer transition flex flex-col justify-between";
-                storeDetail.classList.remove('hidden');
-                homeDetail.classList.add('hidden');
-                titleLabel.innerText = "全家 FamilyMart 門市資訊：";
-            } else if (type === 'home') {
-                optHome.className = "border-2 border-brand-accent bg-brand-bg rounded-xl p-3 cursor-pointer transition flex flex-col justify-between";
-                storeDetail.classList.add('hidden');
-                homeDetail.classList.remove('hidden');
-            }
             updateCheckoutAmounts();
         }
 
         function selectPayment(type) {
             currentPayment = type;
-            const optCredit = document.getElementById('pay-opt-credit');
-            const optLinepay = document.getElementById('pay-opt-linepay');
-            const creditDetails = document.getElementById('credit-card-details');
-
-            optCredit.className = "border border-brand-cream rounded-xl p-3 cursor-pointer transition flex items-center justify-between hover:border-brand-accent";
-            optLinepay.className = "border border-brand-cream rounded-xl p-3 cursor-pointer transition flex items-center justify-between hover:border-brand-accent";
-
-            if (type === 'credit') {
-                optCredit.className = "border-2 border-brand-accent bg-brand-bg rounded-xl p-3 cursor-pointer transition flex items-center justify-between";
-                creditDetails.classList.remove('hidden');
-            } else {
-                optLinepay.className = "border-2 border-brand-accent bg-brand-bg rounded-xl p-3 cursor-pointer transition flex items-center justify-between";
-                creditDetails.classList.add('hidden');
-            }
-        }
-
-        function simulateSelectStore() {
-            const stores = currentShipping === '711' ? ["7-11 旗艦門市 (店號: 110293)", "7-11 溫柔門市 (店號: 883102)"] : ["全家 敦南門市 (店號: F00129)", "全家 樂活門市 (店號: F99301)"];
-            const choice = stores[Math.floor(Math.random() * stores.length)];
-            const parts = choice.split(' (店號: ');
-            document.getElementById('chk-store-name').value = parts[0];
-            document.getElementById('chk-store-id').value = parts[1].replace(')', '');
-            showToast(`已為您地圖模擬選擇門市：${choice}`);
         }
 
         function updateCheckoutAmounts() {
             const subtotal = cart.reduce((sum, i) => sum + i.price, 0);
-            let shippingFee = 0;
-
-            if (currentShipping === 'home') {
-                shippingFee = subtotal >= 2000 ? 0 : 100;
-            } else {
-                shippingFee = subtotal >= 1500 ? 0 : 60;
-            }
-
+            const shippingFee = (currentShipping === 'home' ? (subtotal >= 2000 ? 0 : 100) : (subtotal >= 1500 ? 0 : 60));
             const finalTotal = subtotal + shippingFee;
 
             document.getElementById('chk-subtotal').innerText = `NT$ ${subtotal}`;
@@ -736,205 +440,121 @@
             const subtotal = cart.reduce((sum, i) => sum + i.price, 0);
             const shippingFee = (currentShipping === 'home' ? (subtotal >= 2000 ? 0 : 100) : (subtotal >= 1500 ? 0 : 60));
             const finalTotal = subtotal + shippingFee;
+            const customerName = document.getElementById('chk-name').value || "前台顧客";
             const newOrderId = `COT-20260${Math.floor(1000 + Math.random() * 9000)}`;
 
+            const shipText = currentShipping === '711' ? '7-11 超取' : (currentShipping === 'family' ? '全家 超取' : '黑貓宅配');
+            const payText = currentPayment === 'credit' ? '信用卡' : 'LINE Pay';
+
+            // 1. 扣減商品庫存量 (連動寫回 localStorage)
+            const inventory = getInventory();
+            cart.forEach(cartItem => {
+                const target = inventory.find(inv => inv.id === cartItem.id);
+                if (target) {
+                    target.stock = Math.max(0, (Number(target.stock) || 0) - 1);
+                }
+            });
+            localStorage.setItem('coteacote_inventory', JSON.stringify(inventory));
+
+            // 2. 建立新訂單 (連動至 admin.html)
             const newOrder = {
                 id: newOrderId,
                 date: new Date().toISOString().split('T')[0],
+                name: customerName,
                 items: cart.map(i => i.name).join(', '),
-                total: finalTotal,
-                status: "訂單處理中 🪡"
+                custom: `${shipText} / ${payText}`,
+                price: finalTotal,
+                status: "🪡 刺繡製作中"
             };
 
-            mockOrders.unshift(newOrder);
+            let storedOrders = [];
+            try {
+                storedOrders = JSON.parse(localStorage.getItem('coteacote_orders')) || [];
+            } catch(e) { storedOrders = []; }
 
+            storedOrders.unshift(newOrder);
+            localStorage.setItem('coteacote_orders', JSON.stringify(storedOrders));
+
+            // 廣播觸發 storage 事件
+            window.dispatchEvent(new Event('storage'));
+
+            // 介面更新
             document.getElementById('success-order-id').innerText = newOrderId;
-            document.getElementById('success-shipping-type').innerText = currentShipping === '711' ? '7-11 超商取貨' : (currentShipping === 'family' ? '全家 超商取貨' : '黑貓宅配到府');
-            document.getElementById('success-payment-type').innerText = currentPayment === 'credit' ? '信用卡一次付清 (授權成功)' : 'LINE Pay 付款';
+            document.getElementById('success-shipping-type').innerText = shipText;
+            document.getElementById('success-payment-type').innerText = payText;
 
             document.getElementById('checkout-form-view').classList.add('hidden');
             document.getElementById('checkout-success-view').classList.remove('hidden');
 
             cart = [];
             updateCart();
-            updateMemberUI();
-        }
-
-        function finishCheckoutProcess() {
-            closeCheckoutModal();
-        }
-
-        function toggleMemberModal() {
-            const modal = document.getElementById('member-modal');
-            modal.classList.toggle('hidden');
-        }
-
-        function switchAuthTab(tab) {
-            const loginForm = document.getElementById('login-form');
-            const regForm = document.getElementById('register-form');
-            const loginBtn = document.getElementById('tab-login-btn');
-            const regBtn = document.getElementById('tab-register-btn');
-
-            if (tab === 'login') {
-                loginForm.classList.remove('hidden');
-                regForm.classList.add('hidden');
-                loginBtn.className = "pb-2 px-4 border-b-2 border-brand-accent text-brand-brown font-bold";
-                regBtn.className = "pb-2 px-4 text-gray-400 hover:text-brand-brown";
-            } else {
-                loginForm.classList.add('hidden');
-                regForm.classList.remove('hidden');
-                regBtn.className = "pb-2 px-4 border-b-2 border-brand-accent text-brand-brown font-bold";
-                loginBtn.className = "pb-2 px-4 text-gray-400 hover:text-brand-brown";
-            }
-        }
-
-        function handleLogin(e) {
-            e.preventDefault();
-            const email = document.getElementById('login-email').value;
-            const name = email.split('@')[0] || "貴賓會員";
-            loginUser({ name: name, email: email });
-        }
-
-        function handleRegister(e) {
-            e.preventDefault();
-            const name = document.getElementById('reg-name').value;
-            const email = document.getElementById('reg-email').value;
-            loginUser({ name: name, email: email });
-        }
-
-        function handleQuickLogin(provider) {
-            loginUser({ name: "CÔTE 貴賓", email: `user@${provider.toLowerCase()}` });
-        }
-
-        function loginUser(user) {
-            currentUser = user;
-            updateMemberUI();
-            showToast(`歡迎回來，${currentUser.name}！已為您登入 CÔTE À CÔTE 會員。`);
-        }
-
-        function handleLogout() {
-            currentUser = null;
-            updateMemberUI();
-            showToast('您已順利登出會員帳號。');
-        }
-
-        function updateMemberUI() {
-            const guestView = document.getElementById('member-guest-view');
-            const loggedView = document.getElementById('member-logged-view');
-            const navText = document.getElementById('member-nav-text');
-            const memberIcon = document.getElementById('member-icon');
-
-            if (currentUser) {
-                guestView.classList.add('hidden');
-                loggedView.classList.remove('hidden');
-                navText.innerText = currentUser.name;
-                memberIcon.innerText = "🌸";
-
-                document.getElementById('user-display-name').innerText = currentUser.name;
-                document.getElementById('user-display-email').innerText = currentUser.email;
-                document.getElementById('user-avatar-initial').innerText = currentUser.name.charAt(0).toUpperCase();
-
-                renderSavedNames();
-                renderMemberOrders();
-            } else {
-                guestView.classList.remove('hidden');
-                loggedView.classList.add('hidden');
-                navText.innerText = "會員登入";
-                memberIcon.innerText = "👤";
-            }
-        }
-
-        function renderSavedNames() {
-            const container = document.getElementById('saved-names-list');
-            if (savedEmbroideryNames.length === 0) {
-                container.innerHTML = `<span class="text-gray-400 text-xs">尚無預設名稱</span>`;
-                return;
-            }
-            container.innerHTML = savedEmbroideryNames.map(name => `
-                <span onclick="applySavedEmbroidery('${name}')" class="bg-brand-card hover:bg-brand-cream text-brand-brown px-3 py-1.5 rounded-full border border-brand-cream cursor-pointer transition flex items-center gap-1">
-                    🪡 ${name}
-                </span>
-            `).join('');
-        }
-
-        function renderMemberOrders() {
-            const container = document.getElementById('member-orders-list');
-            if (mockOrders.length === 0) {
-                container.innerHTML = `<p class="text-xs text-gray-400 text-center py-4">尚無訂單紀錄</p>`;
-                return;
-            }
-            container.innerHTML = mockOrders.map(o => `
-                <div class="bg-brand-bg p-3 rounded-lg border border-brand-cream text-xs space-y-1">
-                    <div class="flex justify-between font-bold text-brand-brown">
-                        <span>${o.id} (${o.date})</span>
-                        <span class="text-brand-accent">${o.status}</span>
-                    </div>
-                    <p class="text-gray-600 truncate">${o.items}</p>
-                    <p class="text-right font-bold text-brand-brown">小計：NT$ ${o.total}</p>
-                </div>
-            `).join('');
-        }
-
-        function applySavedEmbroidery(name) {
-            document.getElementById('custom-text-input').value = name;
-            // 自動判斷中英文語系切換
-            const hasChinese = /[\u4e00-\u9fa5]/.test(name);
-            if (hasChinese) {
-                switchEmbroideryLang('zh');
-            } else {
-                switchEmbroideryLang('en');
-            }
-            updatePreview(name);
-            toggleMemberModal();
-            document.getElementById('custom').scrollIntoView({ behavior: 'smooth' });
-        }
-
-        function promptAddEmbroideryName() {
-            const newName = prompt("請輸入欲儲存的寶寶英文姓名或日期：", "Baby Charlotte");
-            if (newName && newName.trim()) {
-                savedEmbroideryNames.push(newName.trim());
-                renderSavedNames();
-                showToast(`已成功新增常用刺繡名稱：${newName.trim()}`);
-            }
+            renderProducts();
+            showToast('下單成功！已扣除對應庫存量並發送至庫存系統。');
         }
 
         function renderProducts(items) {
             const grid = document.getElementById('product-grid');
-            const targetItems = Array.isArray(items) ? items : products;
-            grid.innerHTML = targetItems.map(p => `
-                <div class="bg-white rounded-xl p-4 shadow-sm border border-brand-cream flex flex-col justify-between hover:shadow-md transition">
-                    <div>
-                        <div class="h-40 bg-brand-card rounded-lg flex items-center justify-center text-5xl mb-4 relative">
-                            ${p.icon}
-                            <span class="absolute top-2 left-2 bg-brand-muted text-white text-[10px] px-2 py-0.5 rounded-full">${p.badge}</span>
+            const inventory = getInventory();
+
+            // 依分類篩選
+            let displayList = inventory;
+            if (currentCategoryFilter !== 'all') {
+                displayList = inventory.filter(p => p.category === currentCategoryFilter);
+            }
+
+            grid.innerHTML = displayList.map(p => {
+                const stock = Number(p.stock) || 0;
+                let stockBadge = '';
+                let buttonHtml = '';
+
+                if (stock === 0) {
+                    stockBadge = `<span class="text-[11px] font-bold text-red-500 bg-red-50 px-2 py-0.5 rounded-full border border-red-200">❌ 已售罄</span>`;
+                    buttonHtml = `<button disabled class="bg-gray-200 text-gray-400 text-xs px-3 py-1.5 rounded-md cursor-not-allowed">已售完</button>`;
+                } else if (stock < 8) {
+                    stockBadge = `<span class="text-[11px] font-bold text-amber-700 bg-amber-50 px-2 py-0.5 rounded-full border border-amber-200">⚠️ 剩餘 ${stock} 件</span>`;
+                    buttonHtml = `<button onclick="addToCart(${p.id})" class="bg-brand-accent text-white text-xs px-3 py-1.5 rounded-md hover:bg-opacity-90 transition">+ 加入購物車</button>`;
+                } else {
+                    stockBadge = `<span class="text-[11px] text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">庫存 ${stock} 件</span>`;
+                    buttonHtml = `<button onclick="addToCart(${p.id})" class="bg-brand-accent text-white text-xs px-3 py-1.5 rounded-md hover:bg-opacity-90 transition">+ 加入購物車</button>`;
+                }
+
+                return `
+                    <div class="bg-white rounded-xl p-4 shadow-sm border border-brand-cream flex flex-col justify-between hover:shadow-md transition">
+                        <div>
+                            <div class="h-40 bg-brand-card rounded-lg flex items-center justify-center text-5xl mb-4 relative">
+                                ${p.icon || "🧸"}
+                                <span class="absolute top-2 left-2 bg-brand-muted text-white text-[10px] px-2 py-0.5 rounded-full">${p.badge || "熱銷"}</span>
+                            </div>
+                            <div class="flex items-center justify-between mb-1">
+                                ${stockBadge}
+                            </div>
+                            <h3 class="font-medium text-sm text-brand-brown leading-snug">${p.name}</h3>
                         </div>
-                        <h3 class="font-medium text-sm text-brand-brown leading-snug">${p.name}</h3>
+                        <div class="mt-4 flex items-center justify-between border-t border-gray-100 pt-3">
+                            <span class="text-sm font-bold text-brand-brown">NT$ ${p.price}</span>
+                            ${buttonHtml}
+                        </div>
                     </div>
-                    <div class="mt-4 flex items-center justify-between border-t border-gray-100 pt-3">
-                        <span class="text-sm font-bold text-brand-brown">NT$ ${p.price}</span>
-                        <button onclick="addToCart(${p.id})" class="bg-brand-accent text-white text-xs px-3 py-1.5 rounded-md hover:bg-opacity-90 transition">
-                            + 加入購物車
-                        </button>
-                    </div>
-                </div>
-            `).join('');
+                `;
+            }).join('');
         }
 
         function filterCategory(cat) {
-            if (cat === 'all') {
-                renderProducts(products);
-            } else {
-                renderProducts(products.filter(p => p.category === cat));
-            }
-        }
-
-        function updatePreview(val) {
-            document.getElementById('embroidery-preview').innerText = val.trim() || "Baby Name";
+            currentCategoryFilter = cat;
+            renderProducts();
         }
 
         function addToCart(id) {
-            const item = products.find(p => p.id === id);
+            const inventory = getInventory();
+            const item = inventory.find(p => p.id === id);
+            
+            // 檢查購物車內該商品數量是否超過庫存
+            const currentCartCount = cart.filter(c => c.id === id).length;
             if (item) {
+                if (currentCartCount >= item.stock) {
+                    showToast(`非常抱歉！「${item.name}」目前庫存僅剩 ${item.stock} 件，無法再增加。`);
+                    return;
+                }
                 cart.push(item);
                 updateCart();
                 showToast(`已將「${item.name}」加入購物車！`);
@@ -962,9 +582,6 @@
             const modal = document.getElementById('cart-modal');
             modal.classList.toggle('hidden');
         }
-
-        // Initial render on load
-        renderProducts(products);
     </script>
 </body>
 </html>
