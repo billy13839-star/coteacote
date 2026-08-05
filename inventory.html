@@ -112,7 +112,7 @@
             <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-gray-100 pb-4">
                 <div>
                     <h2 class="font-serif font-bold text-lg text-brand-brown">📦 全館商品庫存清單與進貨調整</h2>
-                    <p class="text-xs text-brand-muted mt-0.5">在此上架、下架或修改庫存量後，官網（index.html）將同步顯示最新狀態</p>
+                    <p class="text-xs text-brand-muted mt-0.5">在此上架、編輯價格與圖片、下架或修改庫存量後，官網（index.html）將同步顯示最新狀態</p>
                 </div>
                 <div class="flex items-center space-x-2">
                     <button onclick="openAddProductModal()" class="text-xs bg-brand-accent text-white px-3 py-1.5 rounded-lg font-bold hover:bg-opacity-90 transition shadow-sm">
@@ -149,6 +149,112 @@
             </div>
         </div>
     </main>
+
+    <!-- ✏️ 編輯現有商品（價格、圖片與資訊）Modal -->
+    <div id="edit-product-modal" class="fixed inset-0 bg-black/40 z-50 hidden flex items-center justify-center p-4 overflow-y-auto">
+        <div class="bg-white rounded-2xl max-w-lg w-full p-6 md:p-8 shadow-2xl relative border border-brand-cream my-8 max-h-[90vh] overflow-y-auto">
+            <button onclick="closeEditProductModal()" class="absolute top-4 right-4 text-gray-400 hover:text-brand-brown text-xl">✕</button>
+            <div class="border-b pb-3 mb-5">
+                <h3 class="text-xl font-serif font-bold text-brand-brown flex items-center gap-2">
+                    <span>✏️</span>
+                    <span>編輯商品價格與圖片</span>
+                </h3>
+                <p class="text-xs text-brand-muted mt-1">修改商品名稱、價格、促銷優惠與圖片，儲存後同步連動前台官網</p>
+            </div>
+
+            <form onsubmit="handleEditProductSubmit(event)" class="space-y-4 text-xs">
+                <input type="hidden" id="edit-prod-id">
+
+                <div>
+                    <label class="block font-medium mb-1 text-gray-700">商品名稱 *</label>
+                    <input type="text" id="edit-prod-name" required
+                           class="w-full px-3 py-2 border border-brand-cream rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-accent">
+                </div>
+
+                <!-- 🖼️ 編輯圖片區域 -->
+                <div>
+                    <label class="block font-medium mb-1 text-gray-700">商品圖片 (上傳新圖或保持原圖)</label>
+                    <div class="flex items-center gap-3">
+                        <input type="file" id="edit-prod-image-file" accept="image/*" onchange="previewEditProductImage(event)"
+                               class="block w-full text-xs text-gray-500 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-bold file:bg-brand-card file:text-brand-brown hover:file:bg-brand-cream transition cursor-pointer">
+                        <button type="button" id="edit-remove-img-btn" onclick="clearEditProductImage()" class="text-xs text-red-500 hover:underline shrink-0">清除圖片</button>
+                    </div>
+                    <div id="edit-img-preview-container" class="mt-2">
+                        <img id="edit-prod-img-preview" src="" alt="商品圖預覽" class="w-24 h-24 object-cover rounded-xl border border-brand-cream shadow-sm">
+                        <p id="edit-no-img-text" class="text-gray-400 text-[11px] hidden italic">目前未設定圖片，將顯示預設 Emoji 圖示</p>
+                    </div>
+                </div>
+
+                <!-- 價格與促銷專區 -->
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block font-medium mb-1 text-gray-700">原價 (NT$) *</label>
+                        <input type="number" id="edit-prod-price" min="0" required
+                               class="w-full px-3 py-2 border border-brand-cream rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-accent font-mono font-bold">
+                    </div>
+                    <div>
+                        <label class="block font-medium mb-1 text-gray-700">商品分類 *</label>
+                        <select id="edit-prod-category" class="w-full px-3 py-2 border border-brand-cream rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-accent bg-white">
+                            <option value="bib">口水巾</option>
+                            <option value="gift">彌月禮盒</option>
+                            <option value="accessories">奶嘴夾與配件</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- 促銷開關卡片 -->
+                <div class="bg-brand-card p-3 rounded-xl border border-brand-cream space-y-3">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <span class="font-bold text-brand-brown block">啟用促銷優惠價</span>
+                            <span class="text-[10px] text-brand-muted">開啟後前台將顯示原價劃線與特價標籤</span>
+                        </div>
+                        <label class="relative inline-flex items-center cursor-pointer">
+                            <input type="checkbox" id="edit-is-sale" class="sr-only peer" onchange="toggleEditSalePriceInput(this.checked)">
+                            <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-brand-accent"></div>
+                        </label>
+                    </div>
+
+                    <div id="edit-sale-price-group" class="hidden pt-2 border-t border-brand-cream/60">
+                        <label class="block font-medium mb-1 text-red-600">促銷折扣價 (NT$) *</label>
+                        <input type="number" id="edit-prod-sale-price" min="0" placeholder="例如：420"
+                               class="w-full px-3 py-2 border border-red-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-400 font-mono text-sm text-red-600 font-bold bg-white">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block font-medium mb-1 text-gray-700">特色標籤</label>
+                        <input type="text" id="edit-prod-badge" placeholder="例如：新品上架 / 熱銷"
+                               class="w-full px-3 py-2 border border-brand-cream rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-accent">
+                    </div>
+                    <div>
+                        <label class="block font-medium mb-1 text-gray-700">備用 Emoji 圖示</label>
+                        <select id="edit-prod-icon" class="w-full px-3 py-2 border border-brand-cream rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-accent bg-white text-base">
+                            <option value="🧣">🧣 口水巾 / 圍脖</option>
+                            <option value="🎁">🎁 經典彌月禮盒</option>
+                            <option value="📎">📎 手作奶嘴夾</option>
+                            <option value="🎀">🎀 蕾絲髮帶 / 配件</option>
+                            <option value="🐰">🐰 親膚安撫手帕</option>
+                            <option value="👼">👼 天使翅膀造型</option>
+                            <option value="🍼">🍼 嬰幼兒日常用品</option>
+                            <option value="🧸">🧸 熊熊紀念組</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="pt-2 flex gap-2">
+                    <button type="button" onclick="closeEditProductModal()" class="w-1/2 bg-gray-100 text-gray-600 py-3 rounded-xl font-bold hover:bg-gray-200 transition">
+                        取消
+                    </button>
+                    <button type="submit" class="w-1/2 bg-brand-accent text-white py-3 rounded-xl font-bold hover:bg-opacity-90 transition shadow-md flex items-center justify-center gap-1">
+                        <span>💾</span>
+                        <span>儲存修改</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
 
     <!-- 🛍️ 上架新商品 Modal -->
     <div id="add-product-modal" class="fixed inset-0 bg-black/40 z-50 hidden flex items-center justify-center p-4 overflow-y-auto">
@@ -242,6 +348,7 @@
 
     <script>
         let uploadedImageBase64 = '';
+        let editUploadedImageBase64 = ''; // 編輯彈窗專用的 Base64 暫存
 
         // 預設商品清單
         const defaultInventory = [
@@ -365,6 +472,9 @@
                             </div>
                         </td>
                         <td class="p-3 text-right space-x-1">
+                            <button onclick="openEditProductModal(${item.id})" class="text-xs bg-amber-50 text-amber-800 border border-amber-200 font-bold px-2 py-1 rounded-lg hover:bg-amber-100 transition">
+                                ✏️ 編輯
+                            </button>
                             <button onclick="adjustStock(${item.id}, 5)" class="text-xs bg-brand-card text-brand-brown border border-brand-cream px-2 py-1 rounded-lg hover:border-brand-accent transition">
                                 +5 補貨
                             </button>
@@ -381,6 +491,121 @@
             document.getElementById('kpi-total-value').innerText = `NT$ ${totalValue.toLocaleString()}`;
             document.getElementById('kpi-low-stock').innerText = `${lowStockCount} 品項`;
             document.getElementById('kpi-out-stock').innerText = `${outOfStockCount} 品項`;
+        }
+
+        // ✏️ 開啟與填入「編輯商品」彈窗資料
+        function openEditProductModal(id) {
+            const inventory = getStoredInventory();
+            const item = inventory.find(p => p.id === id);
+            if (!item) return;
+
+            document.getElementById('edit-prod-id').value = item.id;
+            document.getElementById('edit-prod-name').value = item.name;
+            document.getElementById('edit-prod-price').value = item.price;
+            document.getElementById('edit-prod-category').value = item.category || 'bib';
+            document.getElementById('edit-prod-badge').value = item.badge || '';
+            document.getElementById('edit-prod-icon').value = item.icon || '🧣';
+
+            const isSale = !!item.isSale;
+            document.getElementById('edit-is-sale').checked = isSale;
+            document.getElementById('edit-prod-sale-price').value = item.salePrice || '';
+            toggleEditSalePriceInput(isSale);
+
+            // 初始化圖片預覽
+            editUploadedImageBase64 = item.image || '';
+            const previewImg = document.getElementById('edit-prod-img-preview');
+            const noImgText = document.getElementById('edit-no-img-text');
+
+            if (editUploadedImageBase64) {
+                previewImg.src = editUploadedImageBase64;
+                previewImg.classList.remove('hidden');
+                noImgText.classList.add('hidden');
+            } else {
+                previewImg.src = '';
+                previewImg.classList.add('hidden');
+                noImgText.classList.remove('hidden');
+            }
+
+            document.getElementById('edit-product-modal').classList.remove('hidden');
+        }
+
+        function closeEditProductModal() {
+            document.getElementById('edit-product-modal').classList.add('hidden');
+            document.getElementById('edit-prod-image-file').value = '';
+        }
+
+        function toggleEditSalePriceInput(enabled) {
+            const group = document.getElementById('edit-sale-price-group');
+            const saleInput = document.getElementById('edit-prod-sale-price');
+            if (enabled) {
+                group.classList.remove('hidden');
+                saleInput.setAttribute('required', 'required');
+            } else {
+                group.classList.add('hidden');
+                saleInput.removeAttribute('required');
+            }
+        }
+
+        // 🖼️ 編輯彈窗中的圖片預覽與清除
+        function previewEditProductImage(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    editUploadedImageBase64 = e.target.result;
+                    const previewImg = document.getElementById('edit-prod-img-preview');
+                    const noImgText = document.getElementById('edit-no-img-text');
+                    previewImg.src = editUploadedImageBase64;
+                    previewImg.classList.remove('hidden');
+                    noImgText.classList.add('hidden');
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        function clearEditProductImage() {
+            editUploadedImageBase64 = '';
+            document.getElementById('edit-prod-image-file').value = '';
+            document.getElementById('edit-prod-img-preview').src = '';
+            document.getElementById('edit-prod-img-preview').classList.add('hidden');
+            document.getElementById('edit-no-img-text').classList.remove('hidden');
+        }
+
+        // 💾 儲存編輯商品
+        function handleEditProductSubmit(e) {
+            e.preventDefault();
+            const id = parseInt(document.getElementById('edit-prod-id').value);
+            const name = document.getElementById('edit-prod-name').value.trim();
+            const price = parseInt(document.getElementById('edit-prod-price').value) || 0;
+            const category = document.getElementById('edit-prod-category').value;
+            const badge = document.getElementById('edit-prod-badge').value.trim();
+            const icon = document.getElementById('edit-prod-icon').value;
+            const isSale = document.getElementById('edit-is-sale').checked;
+            const salePriceInput = document.getElementById('edit-prod-sale-price').value;
+            const salePrice = isSale ? (parseInt(salePriceInput) || null) : null;
+
+            if (isSale && salePrice >= price) {
+                alert("促銷折扣價必須低於原價！");
+                return;
+            }
+
+            let inventory = getStoredInventory();
+            const target = inventory.find(p => p.id === id);
+
+            if (target) {
+                target.name = name;
+                target.price = price;
+                target.category = category;
+                target.badge = badge || (isSale ? "限時特惠" : "熱銷");
+                target.icon = icon;
+                target.isSale = isSale;
+                target.salePrice = salePrice;
+                target.image = editUploadedImageBase64;
+
+                saveInventory(inventory);
+                closeEditProductModal();
+                showToast(`已成功修改商品「${name}」的價格與圖片！`);
+            }
         }
 
         // 🗑️ 下架商品功能 (徹底刪除)
