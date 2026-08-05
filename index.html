@@ -6,7 +6,7 @@
     <title>CÔTE À CÔTE | 嬰幼兒織品與客製化刺繡手作禮盒</title>
     <!-- Google Fonts & Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@400;600;700&family=Zen+Maru+Gothic:wght@400;500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@500;700&family=Klee+One:wght@400;600&family=Noto+Serif+TC:wght@400;600;700&family=Yeon+Sung&family=Zen+Maru+Gothic:wght@400;500;700&display=swap" rel="stylesheet">
     <script>
         tailwind.config = {
             theme: {
@@ -32,6 +32,12 @@
     <style>
         body { background-color: #FDFBF7; color: #5D544B; }
         .embroidery-font { font-family: 'Dancing Script', cursive, "Noto Serif TC", serif; }
+
+        /* 專屬刺繡風格字型定義 */
+        .font-handwriting-tc { font-family: '手札體-繁', 'HanziPen TC', 'Klee One', 'Noto Serif TC', cursive, serif; }
+        .font-wawa-tc { font-family: '娃娃體-繁', 'Wawa TC', 'Wawa SC', 'Zen Maru Gothic', cursive, sans-serif; }
+        .font-sauber-script { font-family: 'Sauber Script', 'Dancing Script', 'Pacifico', cursive; }
+        .font-bm-yeonsung { font-family: 'BM YEONSUNG', 'Yeon Sung', cursive, sans-serif; }
     </style>
 </head>
 <body class="font-sans antialiased">
@@ -93,23 +99,60 @@
         <div class="bg-white p-6 md:p-8 rounded-2xl shadow-sm border border-brand-cream">
             <div class="text-center mb-6">
                 <h2 class="text-xl font-serif font-bold text-brand-brown">🧵 專屬刺繡即時預覽</h2>
-                <p class="text-xs text-brand-muted mt-1">輸入您想刺繡的英文名字或日期，搶先看呈現效果</p>
+                <p class="text-xs text-brand-muted mt-1">選擇中英文語系與風格字型，搶先看專屬刺繡效果</p>
             </div>
             
+            <!-- Language Switcher Buttons -->
+            <div class="flex justify-center gap-3 mb-6">
+                <button id="lang-btn-en" onclick="switchEmbroideryLang('en')" class="px-5 py-2 rounded-full text-xs font-bold border-2 transition-all flex items-center gap-1.5 bg-brand-accent text-white border-brand-accent shadow-sm">
+                    🔤 英文刺繡 (English)
+                </button>
+                <button id="lang-btn-zh" onclick="switchEmbroideryLang('zh')" class="px-5 py-2 rounded-full text-xs font-bold border-2 transition-all flex items-center gap-1.5 bg-white text-brand-brown border-brand-cream hover:border-brand-accent">
+                    🈳 中文刺繡 (Chinese)
+                </button>
+            </div>
+
+            <!-- Font Selector Options -->
+            <div class="bg-brand-card p-4 rounded-xl border border-brand-cream mb-6">
+                <!-- English Font Buttons -->
+                <div id="fonts-group-en" class="flex flex-wrap items-center justify-center gap-3">
+                    <span class="text-xs text-brand-brown font-medium">英文字型選擇：</span>
+                    <button id="font-btn-sauber" onclick="selectEmbroideryFont('sauber')" class="px-4 py-2 rounded-lg text-sm border-2 transition flex items-center gap-1 bg-white border-brand-accent text-brand-brown font-sauber-script shadow-sm">
+                        ✨ Sauber Script
+                    </button>
+                    <button id="font-btn-yeonsung" onclick="selectEmbroideryFont('yeonsung')" class="px-4 py-2 rounded-lg text-sm border-2 transition flex items-center gap-1 bg-white border-brand-cream text-gray-600 font-bm-yeonsung hover:border-brand-accent">
+                        🎨 BM Yeonsung
+                    </button>
+                </div>
+
+                <!-- Chinese Font Buttons -->
+                <div id="fonts-group-zh" class="hidden flex flex-wrap items-center justify-center gap-3">
+                    <span class="text-xs text-brand-brown font-medium">中文字型選擇：</span>
+                    <button id="font-btn-handwriting" onclick="selectEmbroideryFont('handwriting')" class="px-4 py-2 rounded-lg text-sm border-2 transition flex items-center gap-1 bg-white border-brand-accent text-brand-brown font-handwriting-tc shadow-sm">
+                        ✍️ 手札體
+                    </button>
+                    <button id="font-btn-wawa" onclick="selectEmbroideryFont('wawa')" class="px-4 py-2 rounded-lg text-sm border-2 transition flex items-center gap-1 bg-white border-brand-cream text-gray-600 font-wawa-tc hover:border-brand-accent">
+                        🧸 娃娃體
+                    </button>
+                </div>
+            </div>
+
             <div class="flex flex-col md:flex-row items-center gap-6">
                 <!-- Preview Canvas Box -->
-                <div class="w-full md:w-1/2 h-36 bg-[#EAE2D6] rounded-xl flex flex-col items-center justify-center p-4 relative shadow-inner">
-                    <span class="absolute top-2 left-3 text-[10px] text-brand-muted tracking-wider">刺繡樣式模擬 (柔和米白金線)</span>
-                    <span id="embroidery-preview" class="text-2xl md:text-3xl text-brand-brown font-serif tracking-widest">
+                <div class="w-full md:w-1/2 h-40 bg-[#EAE2D6] rounded-xl flex flex-col items-center justify-center p-4 relative shadow-inner overflow-hidden">
+                    <span id="preview-tag-info" class="absolute top-2 left-3 text-[10px] text-brand-muted tracking-wider">
+                        刺繡樣式模擬 (Sauber Script)
+                    </span>
+                    <span id="embroidery-preview" class="text-2xl md:text-3xl text-brand-brown tracking-widest font-sauber-script transition-all duration-300">
                         Baby Name
                     </span>
                 </div>
 
                 <!-- Input Field -->
                 <div class="w-full md:w-1/2 space-y-3">
-                    <label class="block text-xs font-medium text-brand-brown">請輸入寶寶姓名 / 生日 (英文)：</label>
+                    <label id="input-label-text" class="block text-xs font-medium text-brand-brown">請輸入寶寶英文姓名 / 生日：</label>
                     <input type="text" id="custom-text-input" value="Baby Name" oninput="updatePreview(this.value)" 
-                           class="w-full px-4 py-2 border border-brand-cream rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-accent" maxLength="15">
+                           class="w-full px-4 py-2 border border-brand-cream rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-accent" maxLength="18">
                     <p class="text-[11px] text-gray-400">* 刺繡服務適用於全系列口水巾、手帕與彌月禮盒組。</p>
                 </div>
             </div>
@@ -492,13 +535,94 @@
 
         let cart = [];
         let currentUser = null;
-        let savedEmbroideryNames = ["Baby Charlotte", "Baby Oliver"];
+        let savedEmbroideryNames = ["Baby Charlotte", "Baby Oliver", "寶寶小美"];
         let mockOrders = [
             { id: "COT-20260101", date: "2026-08-01", items: "【客製刺繡】涼夏風兒輕輕吹口水巾", total: 490, status: "已出貨 🚚" }
         ];
 
         let currentShipping = '711';
         let currentPayment = 'credit';
+
+        // 刺繡客製設定狀態
+        let currentLang = 'en'; // 'en' | 'zh'
+        let currentFont = 'sauber'; // 'sauber' | 'yeonsung' | 'handwriting' | 'wawa'
+
+        const fontCssClasses = {
+            'sauber': 'font-sauber-script',
+            'yeonsung': 'font-bm-yeonsung',
+            'handwriting': 'font-handwriting-tc',
+            'wawa': 'font-wawa-tc'
+        };
+
+        const fontNamesMap = {
+            'sauber': 'Sauber Script',
+            'yeonsung': 'BM Yeonsung',
+            'handwriting': '手札體',
+            'wawa': '娃娃體'
+        };
+
+        function switchEmbroideryLang(lang) {
+            currentLang = lang;
+            const btnEn = document.getElementById('lang-btn-en');
+            const btnZh = document.getElementById('lang-btn-zh');
+            const groupEn = document.getElementById('fonts-group-en');
+            const groupZh = document.getElementById('fonts-group-zh');
+            const inputLabel = document.getElementById('input-label-text');
+            const inputEl = document.getElementById('custom-text-input');
+
+            if (lang === 'en') {
+                btnEn.className = "px-5 py-2 rounded-full text-xs font-bold border-2 transition-all flex items-center gap-1.5 bg-brand-accent text-white border-brand-accent shadow-sm";
+                btnZh.className = "px-5 py-2 rounded-full text-xs font-bold border-2 transition-all flex items-center gap-1.5 bg-white text-brand-brown border-brand-cream hover:border-brand-accent";
+                groupEn.classList.remove('hidden');
+                groupZh.classList.add('hidden');
+                inputLabel.innerText = "請輸入寶寶英文姓名 / 生日：";
+                if (inputEl.value === '寶寶小美' || !inputEl.value) inputEl.value = 'Baby Name';
+                selectEmbroideryFont('sauber');
+            } else {
+                btnZh.className = "px-5 py-2 rounded-full text-xs font-bold border-2 transition-all flex items-center gap-1.5 bg-brand-accent text-white border-brand-accent shadow-sm";
+                btnEn.className = "px-5 py-2 rounded-full text-xs font-bold border-2 transition-all flex items-center gap-1.5 bg-white text-brand-brown border-brand-cream hover:border-brand-accent";
+                groupZh.classList.remove('hidden');
+                groupEn.classList.add('hidden');
+                inputLabel.innerText = "請輸入寶寶中文姓名 / 祝福語：";
+                if (inputEl.value === 'Baby Name' || !inputEl.value) inputEl.value = '寶寶小美';
+                selectEmbroideryFont('handwriting');
+            }
+        }
+
+        function selectEmbroideryFont(fontKey) {
+            currentFont = fontKey;
+            
+            // 按鈕高亮顯示
+            const buttons = {
+                'sauber': document.getElementById('font-btn-sauber'),
+                'yeonsung': document.getElementById('font-btn-yeonsung'),
+                'handwriting': document.getElementById('font-btn-handwriting'),
+                'wawa': document.getElementById('font-btn-wawa')
+            };
+
+            Object.keys(buttons).forEach(key => {
+                if (!buttons[key]) return;
+                if (key === fontKey) {
+                    buttons[key].classList.add('border-brand-accent', 'text-brand-brown', 'shadow-sm');
+                    buttons[key].classList.remove('border-brand-cream', 'text-gray-600');
+                } else {
+                    buttons[key].classList.remove('border-brand-accent', 'shadow-sm');
+                    buttons[key].classList.add('border-brand-cream', 'text-gray-600');
+                }
+            });
+
+            // 更新預覽元素 Font Class
+            const previewEl = document.getElementById('embroidery-preview');
+            const tagInfo = document.getElementById('preview-tag-info');
+
+            // 移除全部字型 Class
+            Object.values(fontCssClasses).forEach(cls => previewEl.classList.remove(cls));
+            // 加入目標字型 Class
+            previewEl.classList.add(fontCssClasses[fontKey]);
+
+            tagInfo.innerText = `刺繡樣式模擬 (${fontNamesMap[fontKey]})`;
+            updatePreview(document.getElementById('custom-text-input').value);
+        }
 
         function showToast(msg) {
             const toast = document.createElement('div');
@@ -753,6 +877,13 @@
 
         function applySavedEmbroidery(name) {
             document.getElementById('custom-text-input').value = name;
+            // 自動判斷中英文語系切換
+            const hasChinese = /[\u4e00-\u9fa5]/.test(name);
+            if (hasChinese) {
+                switchEmbroideryLang('zh');
+            } else {
+                switchEmbroideryLang('en');
+            }
             updatePreview(name);
             toggleMemberModal();
             document.getElementById('custom').scrollIntoView({ behavior: 'smooth' });
