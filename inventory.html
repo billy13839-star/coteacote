@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CÔTE À CÔTE | 品牌庫存即時管理中心</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@600;700&family=Zen+Maru+Gothic:wght@400;500;700&display=swap" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            bg: '#FDFBF7',
+                            card: '#FAF6F0',
+                            accent: '#8F9779',
+                            brown: '#6D5B4F',
+                            muted: '#9A8C73',
+                            cream: '#EAE2D6',
+                            dark: '#4A3E37'
+                        }
+                    },
+                    fontFamily: {
+                        serif: ['"Noto Serif TC"', 'serif'],
+                        sans: ['"Zen Maru Gothic"', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { background-color: #FAF6F0; color: #4A3E37; }
+    </style>
+</head>
+<body class="font-sans antialiased min-h-screen flex flex-col">
+
+    <!-- Top Navigation Bar -->
+    <header class="bg-white border-b border-brand-cream sticky top-0 z-30 shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <span class="text-2xl">📦</span>
+                <div>
+                    <h1 class="font-serif font-bold text-lg text-brand-brown leading-tight">CÔTE À CÔTE 庫存管理中心</h1>
+                    <p class="text-[10px] text-brand-muted truncate max-w-xs sm:max-w-md">
+                        實時連動官網商品庫存數量 (index.html)
+                    </p>
+                </div>
+            </div>
+
+            <!-- Header Nav Buttons -->
+            <div class="flex items-center space-x-3 text-xs">
+                <a href="admin.html" target="_blank" class="text-brand-brown hover:text-brand-accent font-medium flex items-center space-x-1 bg-brand-card px-3 py-1.5 rounded-lg border border-brand-cream transition">
+                    <span>📊</span>
+                    <span class="hidden sm:inline">營運後台</span>
+                </a>
+                <a href="index.html" target="_blank" class="bg-brand-accent text-white px-3 py-1.5 rounded-lg font-bold hover:bg-opacity-90 transition shadow-sm flex items-center space-x-1">
+                    <span>🛒</span>
+                    <span>開啟前台官網</span>
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
+
+        <!-- Live Sales Alert -->
+        <div id="stock-sale-alert" class="hidden bg-emerald-50 border border-emerald-200 text-emerald-800 px-4 py-3 rounded-xl text-xs flex items-center justify-between shadow-sm animate-bounce">
+            <div class="flex items-center space-x-2">
+                <span class="text-lg">🔔</span>
+                <span id="stock-sale-msg">官網剛完成一筆新訂單！商品庫存已自動扣減更新。</span>
+            </div>
+            <button onclick="document.getElementById('stock-sale-alert').classList.add('hidden')" class="font-bold text-emerald-900">✕</button>
+        </div>
+
+        <!-- Inventory Summary KPIs -->
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div class="bg-white p-5 rounded-2xl border border-brand-cream shadow-sm">
+                <div class="text-xs text-brand-muted mb-1 font-medium">現有總庫存量</div>
+                <div id="kpi-total-stock" class="text-3xl font-bold text-brand-brown font-mono">0 件</div>
+                <p class="text-[11px] text-gray-400 mt-1">全館商品庫存加總</p>
+            </div>
+
+            <div class="bg-white p-5 rounded-2xl border border-brand-cream shadow-sm">
+                <div class="text-xs text-brand-muted mb-1 font-medium">庫存總總價值</div>
+                <div id="kpi-total-value" class="text-3xl font-bold text-brand-brown font-mono">NT$ 0</div>
+                <p class="text-[11px] text-gray-400 mt-1">以單價成本計算</p>
+            </div>
+
+            <div class="bg-white p-5 rounded-2xl border border-brand-cream shadow-sm">
+                <div class="text-xs text-brand-muted mb-1 font-medium">低庫存預警 (< 8件)</div>
+                <div id="kpi-low-stock" class="text-3xl font-bold text-amber-600 font-mono">0 品項</div>
+                <p class="text-[11px] text-amber-600/80 mt-1">建議及時安排進貨</p>
+            </div>
+
+            <div class="bg-white p-5 rounded-2xl border border-brand-cream shadow-sm">
+                <div class="text-xs text-brand-muted mb-1 font-medium">已售罄/缺貨中</div>
+                <div id="kpi-out-stock" class="text-3xl font-bold text-red-500 font-mono">0 品項</div>
+                <p class="text-[11px] text-red-400 mt-1">官網將暫停販售</p>
+            </div>
+        </div>
+
+        <!-- Inventory List Table -->
+        <div class="bg-white p-6 rounded-2xl border border-brand-cream shadow-sm space-y-4">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-gray-100 pb-4">
+                <div>
+                    <h2 class="font-serif font-bold text-lg text-brand-brown">📦 全館商品庫存清單與進貨調整</h2>
+                    <p class="text-xs text-brand-muted mt-0.5">在此修改庫存量後，官網（index.html）將同步顯示最新剩餘數量</p>
+                </div>
+                <div class="flex items-center space-x-2">
+                    <button onclick="resetToDefaultStock()" class="text-xs text-gray-500 hover:text-brand-brown border border-brand-cream px-3 py-1.5 rounded-lg transition">
+                        🔄 重置預設庫存
+                    </button>
+                    <button onclick="quickAddAllStock(10)" class="text-xs bg-brand-accent text-white px-3 py-1.5 rounded-lg font-bold hover:bg-opacity-90 transition shadow-sm">
+                        ➕ 全品項一鍵 +10 補貨
+                    </button>
+                </div>
+            </div>
+
+            <!-- Table -->
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse text-xs">
+                    <thead>
+                        <tr class="border-b border-brand-cream text-brand-muted uppercase bg-brand-bg">
+                            <th class="p-3">商品編號</th>
+                            <th class="p-3">商品名稱</th>
+                            <th class="p-3">商品分類</th>
+                            <th class="p-3">銷售單價</th>
+                            <th class="p-3">庫存狀態</th>
+                            <th class="p-3 text-center">當前庫存量調整</th>
+                            <th class="p-3 text-right">操作</th>
+                        </tr>
+                    </thead>
+                    <tbody id="inventory-table-body" class="divide-y divide-gray-100">
+                        <!-- Populated dynamically -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+
+    <!-- Toast Notification -->
+    <div id="toast-msg" class="fixed bottom-4 right-4 bg-brand-brown text-white px-4 py-2.5 rounded-xl text-xs shadow-xl hidden transition-all duration-300">
+        ✨ 庫存數據已成功更新並連動至官網！
+    </div>
+
+    <script>
+        // 預設商品庫存資料庫
+        const defaultInventory = [
+            { id: 1, name: "【客製刺繡】涼夏風兒輕輕吹口水巾", price: 430, category: "口水巾", stock: 15 },
+            { id: 2, name: "【客製刺繡-3件組】我和寶寶的第一場初雪彌月禮盒", price: 1290, category: "彌月禮盒", stock: 8 },
+            { id: 3, name: "【客製刺繡】花海野餐蕾絲荷葉奶嘴夾", price: 170, category: "奶嘴夾與配件", stock: 25 },
+            { id: 4, name: "優雅公主復古蕾絲髮帶 3件組", price: 190, category: "奶嘴夾與配件", stock: 30 },
+            { id: 5, name: "【客製刺繡】我愛我的生日兔子寶寶六層紗手帕", price: 210, category: "口水巾", stock: 6 },
+            { id: 6, name: "【客製刺繡-2件組】小天使與小惡魔立體翅膀口水巾", price: 830, category: "彌月禮盒", stock: 3 }
+        ];
+
+        window.addEventListener('DOMContentLoaded', () => {
+            renderInventoryTable();
+
+            // 監聽來自 index.html 銷售下單導致的 localStorage 變化
+            window.addEventListener('storage', (e) => {
+                if (e.key === 'coteacote_inventory') {
+                    document.getElementById('stock-sale-alert').classList.remove('hidden');
+                    renderInventoryTable();
+                }
+            });
+        });
+
+        function getStoredInventory() {
+            const stored = localStorage.getItem('coteacote_inventory');
+            if (stored) {
+                try {
+                    return JSON.parse(stored);
+                } catch(e) {
+                    console.error("解析庫存失敗", e);
+                }
+            }
+            localStorage.setItem('coteacote_inventory', JSON.stringify(defaultInventory));
+            return defaultInventory;
+        }
+
+        function saveInventory(invData) {
+            localStorage.setItem('coteacote_inventory', JSON.stringify(invData));
+            // 觸發自訂事件以便同分頁即時連動
+            window.dispatchEvent(new Event('storage'));
+            showToast("庫存變更已即時同步至官網！");
+            renderInventoryTable();
+        }
+
+        function renderInventoryTable() {
+            const inventory = getStoredInventory();
+            const tbody = document.getElementById('inventory-table-body');
+
+            // KPI 計算
+            let totalStock = 0;
+            let totalValue = 0;
+            let lowStockCount = 0;
+            let outOfStockCount = 0;
+
+            tbody.innerHTML = inventory.map(item => {
+                const stock = Number(item.stock) || 0;
+                totalStock += stock;
+                totalValue += stock * (Number(item.price) || 0);
+
+                let statusBadge = '';
+                if (stock === 0) {
+                    outOfStockCount++;
+                    statusBadge = `<span class="bg-red-100 text-red-700 px-2 py-0.5 rounded-md text-[11px] font-bold">已售罄</span>`;
+                } else if (stock < 8) {
+                    lowStockCount++;
+                    statusBadge = `<span class="bg-amber-100 text-amber-700 px-2 py-0.5 rounded-md text-[11px] font-bold">庫存偏低</span>`;
+                } else {
+                    statusBadge = `<span class="bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-md text-[11px] font-bold">供應充足</span>`;
+                }
+
+                return `
+                    <tr class="hover:bg-brand-bg transition">
+                        <td class="p-3 font-mono font-bold text-gray-400">#COT-00${item.id}</td>
+                        <td class="p-3 font-medium text-brand-brown">${item.name}</td>
+                        <td class="p-3 text-gray-500">${item.category}</td>
+                        <td class="p-3 font-mono font-bold text-brand-brown">NT$ ${item.price}</td>
+                        <td class="p-3">${statusBadge}</td>
+                        <td class="p-3 text-center">
+                            <div class="inline-flex items-center space-x-1 bg-brand-card p-1 rounded-xl border border-brand-cream">
+                                <button onclick="adjustStock(${item.id}, -1)" class="w-7 h-7 bg-white rounded-lg border border-brand-cream font-bold hover:bg-red-50 hover:text-red-600 hover:border-red-200 transition text-sm flex items-center justify-center">
+                                    -
+                                </button>
+                                <input type="number" value="${stock}" min="0" onchange="directUpdateStock(${item.id}, this.value)"
+                                       class="w-14 text-center bg-transparent font-mono font-bold text-brand-brown focus:outline-none focus:bg-white rounded py-1">
+                                <button onclick="adjustStock(${item.id}, 1)" class="w-7 h-7 bg-white rounded-lg border border-brand-cream font-bold hover:bg-emerald-50 hover:text-emerald-600 hover:border-emerald-200 transition text-sm flex items-center justify-center">
+                                    +
+                                </button>
+                            </div>
+                        </td>
+                        <td class="p-3 text-right">
+                            <button onclick="adjustStock(${item.id}, 5)" class="text-xs bg-brand-card text-brand-brown border border-brand-cream px-2.5 py-1 rounded-lg hover:border-brand-accent transition">
+                                +5 補貨
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+
+            // 更新 KPI Card
+            document.getElementById('kpi-total-stock').innerText = `${totalStock.toLocaleString()} 件`;
+            document.getElementById('kpi-total-value').innerText = `NT$ ${totalValue.toLocaleString()}`;
+            document.getElementById('kpi-low-stock').innerText = `${lowStockCount} 品項`;
+            document.getElementById('kpi-out-stock').innerText = `${outOfStockCount} 品項`;
+        }
+
+        function adjustStock(productId, delta) {
+            const inventory = getStoredInventory();
+            const target = inventory.find(i => i.id === productId);
+            if (target) {
+                target.stock = Math.max(0, (Number(target.stock) || 0) + delta);
+                saveInventory(inventory);
+            }
+        }
+
+        function directUpdateStock(productId, newVal) {
+            const inventory = getStoredInventory();
+            const target = inventory.find(i => i.id === productId);
+            if (target) {
+                target.stock = Math.max(0, parseInt(newVal) || 0);
+                saveInventory(inventory);
+            }
+        }
+
+        function quickAddAllStock(amount) {
+            const inventory = getStoredInventory();
+            inventory.forEach(item => {
+                item.stock = (Number(item.stock) || 0) + amount;
+            });
+            saveInventory(inventory);
+        }
+
+        function resetToDefaultStock() {
+            if (confirm("確定要將庫存還原為系統初始預設值嗎？")) {
+                saveInventory(defaultInventory);
+            }
+        }
+
+        function showToast(msg) {
+            const toast = document.getElementById('toast-msg');
+            toast.innerText = `✨ ${msg}`;
+            toast.classList.remove('hidden');
+            setTimeout(() => {
+                toast.classList.add('hidden');
+            }, 2500);
+        }
+    </script>
+</body>
+</html>
