@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CÔTE À CÔTE | 獨立品牌營運監控後台</title>
+    <!-- Tailwind CSS & Chart.js -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@600;700&family=Zen+Maru+Gothic:wght@400;500;700&display=swap" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            bg: '#FDFBF7',
+                            card: '#FAF6F0',
+                            accent: '#8F9779',
+                            brown: '#6D5B4F',
+                            muted: '#9A8C73',
+                            cream: '#EAE2D6',
+                            dark: '#4A3E37'
+                        }
+                    },
+                    fontFamily: {
+                        serif: ['"Noto Serif TC"', 'serif'],
+                        sans: ['"Zen Maru Gothic"', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { background-color: #FAF6F0; color: #4A3E37; }
+    </style>
+</head>
+<body class="font-sans antialiased min-h-screen flex flex-col">
+
+    <!-- Auth Lock Screen Modal (Simulated Security Protection) -->
+    <div id="auth-overlay" class="fixed inset-0 bg-[#6D5B4F]/90 z-50 flex items-center justify-center p-4 backdrop-blur-md">
+        <div class="bg-white rounded-2xl max-w-md w-full p-8 shadow-2xl border border-brand-cream text-center space-y-6">
+            <div class="w-16 h-16 bg-brand-card rounded-full flex items-center justify-center mx-auto text-3xl shadow-inner">
+                🔒
+            </div>
+            <div>
+                <h2 class="text-2xl font-serif font-bold text-brand-brown">CÔTE À CÔTE 管理系統</h2>
+                <p class="text-xs text-brand-muted mt-1">此頁面為內部營運專用，請輸入管理員密碼</p>
+            </div>
+            
+            <form onsubmit="verifyAdminPass(event)" class="space-y-4">
+                <div>
+                    <input type="password" id="admin-pass-input" placeholder="預設密碼：1234" required
+                           class="w-full text-center px-4 py-3 border border-brand-cream rounded-xl text-lg font-mono tracking-widest focus:outline-none focus:ring-2 focus:ring-brand-accent">
+                    <p id="auth-error-msg" class="text-xs text-red-500 mt-2 hidden">⚠️ 密碼錯誤，請重新輸入 (預設為 1234)</p>
+                </div>
+                <button type="submit" class="w-full bg-brand-accent text-white py-3 rounded-xl text-sm font-bold hover:bg-opacity-90 transition shadow-md">
+                    驗證身份並開啟後台
+                </button>
+            </form>
+            <div class="text-[11px] text-gray-400">
+                💡 建議配合 SSL 安全加密網址 (`https://admin.coteacote.tw`) 使用
+            </div>
+        </div>
+    </div>
+
+    <!-- Top Navigation Bar -->
+    <header class="bg-white border-b border-brand-cream sticky top-0 z-30 shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <span class="text-2xl">📊</span>
+                <div>
+                    <h1 class="font-serif font-bold text-lg text-brand-brown leading-tight">CÔTE À CÔTE 營運監控中心</h1>
+                    <p class="text-[10px] text-brand-muted">獨立後台網址系統 v2.4 (Real-time Dashboard)</p>
+                </div>
+            </div>
+
+            <!-- Header Controls -->
+            <div class="flex items-center space-x-4">
+                <div class="hidden sm:flex items-center space-x-2 text-xs bg-emerald-50 text-emerald-700 px-3 py-1.5 rounded-full border border-emerald-200">
+                    <span class="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></span>
+                    <span class="font-medium">系統運作中</span>
+                </div>
+                
+                <a href="index.html" target="_blank" class="text-xs text-brand-brown hover:text-brand-accent font-medium flex items-center space-x-1 bg-brand-card px-3 py-1.5 rounded-lg border border-brand-cream transition">
+                    <span>🛒</span>
+                    <span>開啟前台官網</span>
+                </a>
+
+                <button onclick="lockDashboard()" class="text-xs text-gray-500 hover:text-red-600 transition">
+                    🔒 鎖定後台
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content Container -->
+    <main id="main-dashboard-content" class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8 hidden">
+        
+        <!-- Real-time KPI Cards -->
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <!-- Online Users -->
+            <div class="bg-white p-5 rounded-2xl border border-brand-cream shadow-sm hover:shadow-md transition">
+                <div class="flex items-center justify-between text-xs text-brand-muted mb-2">
+                    <span class="font-medium">即時線上訪客</span>
+                    <span class="relative flex h-2.5 w-2.5">
+                      <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                      <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
+                    </span>
+                </div>
+                <div id="kpi-online-users" class="text-3xl font-bold text-brand-brown font-mono">28 人</div>
+                <p class="text-xs text-emerald-600 mt-2 flex items-center gap-1">
+                    <span>↑ 14%</span>
+                    <span class="text-gray-400 text-[11px]">較半小時前成長</span>
+                </p>
+            </div>
+
+            <!-- Today Sales -->
+            <div class="bg-white p-5 rounded-2xl border border-brand-cream shadow-sm hover:shadow-md transition">
+                <div class="text-xs text-brand-muted mb-2 font-medium">今日營業額 (Revenue)</div>
+                <div id="kpi-today-revenue" class="text-3xl font-bold text-brand-brown font-mono">NT$ 21,800</div>
+                <p class="text-xs text-emerald-600 mt-2 flex items-center gap-1">
+                    <span>↑ 32%</span>
+                    <span class="text-gray-400 text-[11px]">已達本日目標 85%</span>
+                </p>
+            </div>
+
+            <!-- Orders Count -->
+            <div class="bg-white p-5 rounded-2xl border border-brand-cream shadow-sm hover:shadow-md transition">
+                <div class="text-xs text-brand-muted mb-2 font-medium">今日成交訂單</div>
+                <div id="kpi-today-orders" class="text-3xl font-bold text-brand-brown font-mono">22 筆</div>
+                <p class="text-xs text-brand-muted mt-2 text-[11px]">
+                    平均客單價 <span class="font-bold text-brand-brown">NT$ 990</span>
+                </p>
+            </div>
+
+            <!-- Conversion Rate -->
+            <div class="bg-white p-5 rounded-2xl border border-brand-cream shadow-sm hover:shadow-md transition">
+                <div class="text-xs text-brand-muted mb-2 font-medium">官網轉換率</div>
+                <div class="text-3xl font-bold text-brand-brown font-mono">3.92%</div>
+                <p class="text-xs text-emerald-600 mt-2 flex items-center gap-1">
+                    <span>↑ 0.5%</span>
+                    <span class="text-gray-400 text-[11px]">高於嬰幼兒同業平均</span>
+                </p>
+            </div>
+        </div>
+
+        <!-- Section 1: Revenue Analytics Chart -->
+        <div class="bg-white p-6 rounded-2xl border border-brand-cream shadow-sm">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+                <div>
+                    <h2 class="font-serif font-bold text-lg text-brand-brown">📈 品牌營業額趨勢分析</h2>
+                    <p class="text-xs text-brand-muted mt-0.5">可切換日、月、年維度查看銷售數據走勢</p>
+                </div>
+                <div class="flex bg-brand-card p-1 rounded-xl border border-brand-cream text-xs">
+                    <button id="btn-period-daily" onclick="switchRevenuePeriod('daily')" class="px-4 py-1.5 rounded-lg font-bold bg-brand-accent text-white transition shadow-sm">每日</button>
+                    <button id="btn-period-monthly" onclick="switchRevenuePeriod('monthly')" class="px-4 py-1.5 rounded-lg font-bold text-brand-brown hover:text-brand-accent transition">每月</button>
+                    <button id="btn-period-yearly" onclick="switchRevenuePeriod('yearly')" class="px-4 py-1.5 rounded-lg font-bold text-brand-brown hover:text-brand-accent transition">每年</button>
+                </div>
+            </div>
+            <div class="h-72 w-full">
+                <canvas id="mainRevenueChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Section 2: Two Columns Charts -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <!-- Popular Products Ranking -->
+            <div class="bg-white p-6 rounded-2xl border border-brand-cream shadow-sm">
+                <div class="mb-4">
+                    <h3 class="font-serif font-bold text-base text-brand-brown">👑 顧客喜愛與熱銷商品排行</h3>
+                    <p class="text-xs text-brand-muted">綜合「加入購物車」與「實際下單」喜好數據</p>
+                </div>
+                <div class="h-60">
+                    <canvas id="popularProductsChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Regional Analytics -->
+            <div class="bg-white p-6 rounded-2xl border border-brand-cream shadow-sm">
+                <div class="mb-4">
+                    <h3 class="font-serif font-bold text-base text-brand-brown">🌍 訪客地區與客群分布</h3>
+                    <p class="text-xs text-brand-muted">主要消費寶媽與贈禮客群城市來源</p>
+                </div>
+                <div class="h-60 flex justify-center items-center">
+                    <canvas id="regionalDoughnutChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Section 3: Live Orders & Custom Embroidery Queue -->
+        <div class="bg-white p-6 rounded-2xl border border-brand-cream shadow-sm">
+            <div class="flex items-center justify-between mb-4">
+                <div>
+                    <h3 class="font-serif font-bold text-base text-brand-brown">🪡 最新客製化刺繡訂單處理排程</h3>
+                    <p class="text-xs text-brand-muted">即時監控手作排程與物流出貨狀態</p>
+                </div>
+                <button onclick="refreshMockOrders()" class="text-xs bg-brand-card text-brand-brown border border-brand-cream px-3 py-1.5 rounded-lg hover:border-brand-accent transition">
+                    🔄 重新整理
+                </button>
+            </div>
+
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse text-xs">
+                    <thead>
+                        <tr class="border-b border-brand-cream text-brand-muted uppercase bg-brand-bg">
+                            <th class="p-3">訂單編號</th>
+                            <th class="p-3">訂購時間</th>
+                            <th class="p-3">顧客姓名</th>
+                            <th class="p-3">訂購商品內容</th>
+                            <th class="p-3">刺繡姓名/字型</th>
+                            <th class="p-3">總金額</th>
+                            <th class="p-3">目前進度</th>
+                        </tr>
+                    </thead>
+                    <tbody id="orders-table-body" class="divide-y divide-gray-100">
+                        <!-- Populated dynamically -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </main>
+
+    <script>
+        let revenueChart = null;
+        let popularChart = null;
+        let regionalChart = null;
+        let liveTimer = null;
+
+        function verifyAdminPass(e) {
+            e.preventDefault();
+            const input = document.getElementById('admin-pass-input').value;
+            if (input === '1234') {
+                document.getElementById('auth-overlay').classList.add('hidden');
+                document.getElementById('main-dashboard-content').classList.remove('hidden');
+                initDashboard();
+            } else {
+                document.getElementById('auth-error-msg').classList.remove('hidden');
+            }
+        }
+
+        function lockDashboard() {
+            document.getElementById('auth-overlay').classList.remove('hidden');
+            document.getElementById('main-dashboard-content').classList.add('hidden');
+            if (liveTimer) clearInterval(liveTimer);
+        }
+
+        function initDashboard() {
+            renderRevenueChart('daily');
+            renderPopularChart();
+            renderRegionalChart();
+            renderOrdersTable();
+            startLiveSimulation();
+        }
+
+        function startLiveSimulation() {
+            if (liveTimer) clearInterval(liveTimer);
+            liveTimer = setInterval(() => {
+                const el = document.getElementById('kpi-online-users');
+                if (el) {
+                    const current = parseInt(el.innerText) || 28;
+                    const change = Math.floor(Math.random() * 5) - 2;
+                    const newCount = Math.max(15, current + change);
+                    el.innerText = `${newCount} 人`;
+                }
+            }, 3000);
+        }
+
+        function switchRevenuePeriod(period) {
+            ['daily', 'monthly', 'yearly'].forEach(p => {
+                const btn = document.getElementById(`btn-period-${p}`);
+                if (p === period) {
+                    btn.className = "px-4 py-1.5 rounded-lg font-bold bg-brand-accent text-white transition shadow-sm";
+                } else {
+                    btn.className = "px-4 py-1.5 rounded-lg font-bold text-brand-brown hover:text-brand-accent transition";
+                }
+            });
+            renderRevenueChart(period);
+        }
+
+        function renderRevenueChart(period) {
+            const ctx = document.getElementById('mainRevenueChart').getContext('2d');
+            if (revenueChart) revenueChart.destroy();
+
+            let labels = [], data = [];
+            if (period === 'daily') {
+                labels = ['08/01', '08/02', '08/03', '08/04', '08/05', '08/06', '今日 (08/07)'];
+                data = [12400, 15800, 14200, 19500, 16800, 21000, 21800];
+            } else if (period === 'monthly') {
+                labels = ['3月', '4月', '5月', '6月', '7月', '8月 (本月)'];
+                data = [280000, 320000, 410000, 390000, 480000, 520000];
+            } else {
+                labels = ['2023 年', '2024 年', '2025 年', '2026 年 (預估)'];
+                data = [1850000, 3200000, 4850000, 6200000];
+            }
+
+            revenueChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: '營業額 (NT$)',
+                        data: data,
+                        borderColor: '#8F9779',
+                        backgroundColor: 'rgba(143, 151, 121, 0.15)',
+                        fill: true,
+                        tension: 0.3,
+                        pointBackgroundColor: '#6D5B4F',
+                        pointRadius: 5
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        y: {
+                            grid: { color: '#FAF6F0' },
+                            ticks: { callback: (v) => 'NT$ ' + v.toLocaleString() }
+                        },
+                        x: { grid: { display: false } }
+                    }
+                }
+            });
+        }
+
+        function renderPopularChart() {
+            const ctx = document.getElementById('popularProductsChart').getContext('2d');
+            if (popularChart) popularChart.destroy();
+
+            popularChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['雪花彌月禮盒', '涼夏風口水巾', '翅膀口水巾組', '蕾絲奶嘴夾', '兔子六層紗手帕'],
+                    datasets: [{
+                        label: '熱度積分',
+                        data: [380, 295, 230, 185, 150],
+                        backgroundColor: '#6D5B4F',
+                        borderRadius: 6
+                    }]
+                },
+                options: {
+                    indexAxis: 'y',
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        x: { grid: { color: '#FAF6F0' } },
+                        y: { grid: { display: false } }
+                    }
+                }
+            });
+        }
+
+        function renderRegionalChart() {
+            const ctx = document.getElementById('regionalDoughnutChart').getContext('2d');
+            if (regionalChart) regionalChart.destroy();
+
+            regionalChart = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['雙北地區', '台中市', '高雄市', '新竹/桃園', '其他縣市與海外'],
+                    datasets: [{
+                        data: [42, 20, 15, 13, 10],
+                        backgroundColor: ['#8F9779', '#6D5B4F', '#9A8C73', '#EAE2D6', '#C4B5A5'],
+                        borderWidth: 2,
+                        borderColor: '#ffffff'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { position: 'right' } }
+                }
+            });
+        }
+
+        const mockOrders = [
+            { id: 'COT-2026080701', time: '14:25', name: '陳雅婷 媽媽', items: '【客製刺繡】涼夏風兒輕輕吹口水巾 x 2', custom: 'Baby Charlotte (Sauber Script)', price: 860, status: '🪡 刺繡製作中' },
+            { id: 'COT-2026080702', time: '13:10', name: '林美玲 小姐', items: '【客製刺繡-3件組】初雪彌月禮盒', custom: '寶寶小美 (手札體)', price: 1290, status: '📦 準備包裝出貨' },
+            { id: 'COT-2026080703', time: '11:45', name: '張哲銘 先生', items: '花海野餐蕾絲荷葉奶嘴夾 x 1', custom: '無客製', price: 170, status: '🚚 已交寄 7-11' },
+            { id: 'COT-2026080704', time: '09:30', name: '黃怡君 媽媽', items: '【客製刺繡】立體翅膀口水巾組', custom: 'Baby Oliver (BM Yeonsung)', price: 830, status: '✅ 已完成送達' }
+        ];
+
+        function renderOrdersTable() {
+            const tbody = document.getElementById('orders-table-body');
+            tbody.innerHTML = mockOrders.map(o => `
+                <tr class="hover:bg-brand-bg transition">
+                    <td class="p-3 font-mono font-bold text-brand-brown">${o.id}</td>
+                    <td class="p-3 text-gray-500">${o.time}</td>
+                    <td class="p-3 font-medium">${o.name}</td>
+                    <td class="p-3 text-gray-700">${o.items}</td>
+                    <td class="p-3 font-serif text-brand-brown">${o.custom}</td>
+                    <td class="p-3 font-mono font-bold">NT$ ${o.price}</td>
+                    <td class="p-3 font-bold text-brand-accent">${o.status}</td>
+                </tr>
+            `).join('');
+        }
+
+        function refreshMockOrders() {
+            renderOrdersTable();
+        }
+    </script>
+</body>
+</html>
