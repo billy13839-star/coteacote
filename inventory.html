@@ -52,11 +52,15 @@
 
             <!-- Header Nav Buttons -->
             <div class="flex items-center space-x-3 text-xs">
+                <button onclick="openAddProductModal()" class="bg-brand-accent text-white px-3 py-1.5 rounded-lg font-bold hover:bg-opacity-90 transition shadow-sm flex items-center space-x-1">
+                    <span>➕</span>
+                    <span>上架新商品</span>
+                </button>
                 <a href="admin.html" target="_blank" class="text-brand-brown hover:text-brand-accent font-medium flex items-center space-x-1 bg-brand-card px-3 py-1.5 rounded-lg border border-brand-cream transition">
                     <span>📊</span>
                     <span class="hidden sm:inline">營運後台</span>
                 </a>
-                <a href="index.html" target="_blank" class="bg-brand-accent text-white px-3 py-1.5 rounded-lg font-bold hover:bg-opacity-90 transition shadow-sm flex items-center space-x-1">
+                <a href="index.html" target="_blank" class="bg-brand-card text-brand-brown border border-brand-cream px-3 py-1.5 rounded-lg font-bold hover:border-brand-accent transition flex items-center space-x-1">
                     <span>🛒</span>
                     <span>開啟前台官網</span>
                 </a>
@@ -108,14 +112,17 @@
             <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-gray-100 pb-4">
                 <div>
                     <h2 class="font-serif font-bold text-lg text-brand-brown">📦 全館商品庫存清單與進貨調整</h2>
-                    <p class="text-xs text-brand-muted mt-0.5">在此修改庫存量後，官網（index.html）將同步顯示最新剩餘數量</p>
+                    <p class="text-xs text-brand-muted mt-0.5">在此上架、下架或修改庫存量後，官網（index.html）將同步顯示最新狀態</p>
                 </div>
                 <div class="flex items-center space-x-2">
+                    <button onclick="openAddProductModal()" class="text-xs bg-brand-accent text-white px-3 py-1.5 rounded-lg font-bold hover:bg-opacity-90 transition shadow-sm">
+                        ➕ 上架新商品
+                    </button>
                     <button onclick="resetToDefaultStock()" class="text-xs text-gray-500 hover:text-brand-brown border border-brand-cream px-3 py-1.5 rounded-lg transition">
                         🔄 重置預設庫存
                     </button>
-                    <button onclick="quickAddAllStock(10)" class="text-xs bg-brand-accent text-white px-3 py-1.5 rounded-lg font-bold hover:bg-opacity-90 transition shadow-sm">
-                        ➕ 全品項一鍵 +10 補貨
+                    <button onclick="quickAddAllStock(10)" class="text-xs bg-brand-card text-brand-brown border border-brand-cream px-3 py-1.5 rounded-lg font-bold hover:border-brand-accent transition">
+                        ➕ 一鍵 +10 補貨
                     </button>
                 </div>
             </div>
@@ -125,14 +132,14 @@
                 <table class="w-full text-left border-collapse text-xs">
                     <thead>
                         <tr class="border-b border-brand-cream text-brand-muted uppercase bg-brand-bg">
-                            <th class="p-3">商品編號</th>
+                            <th class="p-3">編號</th>
                             <th class="p-3">縮圖/圖示</th>
-                            <th class="p-3">商品名稱 (Pinkoi 設計館風格)</th>
+                            <th class="p-3">商品名稱</th>
                             <th class="p-3">分類</th>
-                            <th class="p-3">當前售價 / 促銷狀態</th>
+                            <th class="p-3">售價 / 促銷狀態</th>
                             <th class="p-3">庫存狀態</th>
                             <th class="p-3 text-center">當前庫存量調整</th>
-                            <th class="p-3 text-right">快速操作</th>
+                            <th class="p-3 text-right">管理操作</th>
                         </tr>
                     </thead>
                     <tbody id="inventory-table-body" class="divide-y divide-gray-100">
@@ -143,20 +150,107 @@
         </div>
     </main>
 
+    <!-- 🛍️ 上架新商品 Modal -->
+    <div id="add-product-modal" class="fixed inset-0 bg-black/40 z-50 hidden flex items-center justify-center p-4 overflow-y-auto">
+        <div class="bg-white rounded-2xl max-w-lg w-full p-6 md:p-8 shadow-2xl relative border border-brand-cream my-8 max-h-[90vh] overflow-y-auto">
+            <button onclick="closeAddProductModal()" class="absolute top-4 right-4 text-gray-400 hover:text-brand-brown text-xl">✕</button>
+            <div class="border-b pb-3 mb-5">
+                <h3 class="text-xl font-serif font-bold text-brand-brown flex items-center gap-2">
+                    <span>🛍️</span>
+                    <span>上架全新商品至官網</span>
+                </h3>
+                <p class="text-xs text-brand-muted mt-1">填寫商品資訊與上傳圖片，發布後將同步連動至前台官網 (index.html)</p>
+            </div>
+
+            <form onsubmit="handleAddProductSubmit(event)" class="space-y-4 text-xs">
+                <div>
+                    <label class="block font-medium mb-1 text-gray-700">商品名稱 *</label>
+                    <input type="text" id="new-prod-name" placeholder="例如：【客製刺繡】法式蕾絲親膚口水巾" required
+                           class="w-full px-3 py-2 border border-brand-cream rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-accent">
+                </div>
+
+                <!-- 🖼️ 圖片上傳與預覽區域 -->
+                <div>
+                    <label class="block font-medium mb-1 text-gray-700">商品圖片上傳 (可選)</label>
+                    <div class="flex items-center gap-3">
+                        <input type="file" id="new-prod-image-file" accept="image/*" onchange="previewProductImage(event)"
+                               class="block w-full text-xs text-gray-500 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-bold file:bg-brand-card file:text-brand-brown hover:file:bg-brand-cream transition cursor-pointer">
+                        <button type="button" id="remove-img-btn" onclick="clearProductImage()" class="hidden text-xs text-red-500 hover:underline shrink-0">清除圖片</button>
+                    </div>
+                    <div id="img-preview-container" class="mt-2 hidden">
+                        <img id="new-prod-img-preview" src="" alt="商品圖預覽" class="w-24 h-24 object-cover rounded-xl border border-brand-cream shadow-sm">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block font-medium mb-1 text-gray-700">銷售單價 (NT$) *</label>
+                        <input type="number" id="new-prod-price" placeholder="450" min="0" required
+                               class="w-full px-3 py-2 border border-brand-cream rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-accent">
+                    </div>
+                    <div>
+                        <label class="block font-medium mb-1 text-gray-700">初始庫存數量 *</label>
+                        <input type="number" id="new-prod-stock" placeholder="20" min="0" required
+                               class="w-full px-3 py-2 border border-brand-cream rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-accent">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block font-medium mb-1 text-gray-700">商品分類 *</label>
+                        <select id="new-prod-category" class="w-full px-3 py-2 border border-brand-cream rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-accent bg-white">
+                            <option value="bib">口水巾</option>
+                            <option value="gift">彌月禮盒</option>
+                            <option value="accessories">奶嘴夾與配件</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block font-medium mb-1 text-gray-700">商品特色標籤</label>
+                        <input type="text" id="new-prod-badge" placeholder="例如：新品上架 / 熱銷"
+                               class="w-full px-3 py-2 border border-brand-cream rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-accent">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block font-medium mb-1 text-gray-700">代表備用圖示 / Emojis (若無上傳圖片時顯示)</label>
+                    <select id="new-prod-icon" class="w-full px-3 py-2 border border-brand-cream rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-accent bg-white text-base">
+                        <option value="🧣">🧣 口水巾 / 圍脖</option>
+                        <option value="🎁">🎁 經典彌月禮盒</option>
+                        <option value="📎">📎 手作奶嘴夾</option>
+                        <option value="🎀">🎀 蕾絲髮帶 / 配件</option>
+                        <option value="🐰">🐰 親膚安撫手帕</option>
+                        <option value="👼">👼 天使翅膀造型</option>
+                        <option value="🍼">🍼 嬰幼兒日常用品</option>
+                        <option value="🧸">🧸 熊熊紀念組</option>
+                    </select>
+                </div>
+
+                <div class="pt-2">
+                    <button type="submit" class="w-full bg-brand-accent text-white py-3 rounded-xl font-bold hover:bg-opacity-90 transition shadow-md flex items-center justify-center gap-2">
+                        <span>✨</span>
+                        <span>確認無誤，正式發布上架</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <!-- Toast Notification -->
     <div id="toast-msg" class="fixed bottom-4 right-4 bg-brand-brown text-white px-4 py-2.5 rounded-xl text-xs shadow-xl hidden transition-all duration-300 z-50">
         ✨ 庫存數據已成功更新並連動至官網！
     </div>
 
     <script>
-        // 參考 Pinkoi 設計館 (CÔTE À CÔTE 身邊的小東西) 風格的預設商品清單
+        let uploadedImageBase64 = '';
+
+        // 預設商品清單
         const defaultInventory = [
-            { id: 1, name: "【客製刺繡】涼夏風兒輕輕吹口水巾", price: 430, isSale: false, salePrice: null, category: "口水巾", icon: "🧣", image: "", stock: 15 },
-            { id: 2, name: "【客製刺繡-3件組】我和寶寶的第一場初雪彌月禮盒", price: 1290, isSale: true, salePrice: 1180, category: "彌月禮盒", icon: "🎁", image: "", stock: 8 },
-            { id: 3, name: "【客製刺繡】花海野餐蕾絲荷葉奶嘴夾", price: 170, isSale: false, salePrice: null, category: "奶嘴夾與配件", icon: "📎", image: "", stock: 25 },
-            { id: 4, name: "優雅公主復古蕾絲髮帶 3件組", price: 190, isSale: false, salePrice: null, category: "奶嘴夾與配件", icon: "🎀", image: "", stock: 30 },
-            { id: 5, name: "【客製刺繡】我愛我的生日兔子寶寶六層紗手帕", price: 210, isSale: false, salePrice: null, category: "口水巾", icon: "🐰", image: "", stock: 6 },
-            { id: 6, name: "【客製刺繡-2件組】小天使與小惡魔立體翅膀口水巾", price: 830, isSale: true, salePrice: 750, category: "彌月禮盒", icon: "👼", image: "", stock: 3 }
+            { id: 1, name: "【客製刺繡】涼夏風兒輕輕吹口水巾", price: 430, isSale: false, salePrice: null, category: "bib", badge: "熱銷組", icon: "🧣", image: "", stock: 15 },
+            { id: 2, name: "【客製刺繡-3件組】我和寶寶的第一場初雪彌月禮盒", price: 1290, isSale: true, salePrice: 1180, category: "gift", badge: "經典禮盒", icon: "🎁", image: "", stock: 8 },
+            { id: 3, name: "【客製刺繡】花海野餐蕾絲荷葉奶嘴夾", price: 170, isSale: false, salePrice: null, category: "accessories", badge: "手作限定", icon: "📎", image: "", stock: 25 },
+            { id: 4, name: "優雅公主復古蕾絲髮帶 3件組", price: 190, isSale: false, salePrice: null, category: "accessories", badge: "人氣單品", icon: "🎀", image: "", stock: 30 },
+            { id: 5, name: "【客製刺繡】我愛我的生日兔子寶寶六層紗手帕", price: 210, isSale: false, salePrice: null, category: "bib", badge: "親膚推薦", icon: "🐰", image: "", stock: 6 },
+            { id: 6, name: "【客製刺繡-2件組】小天使與小惡魔立體翅膀口水巾", price: 830, isSale: true, salePrice: 750, category: "gift", badge: "彌月首選", icon: "👼", image: "", stock: 3 }
         ];
 
         window.addEventListener('DOMContentLoaded', () => {
@@ -187,13 +281,21 @@
         function saveInventory(invData) {
             localStorage.setItem('coteacote_inventory', JSON.stringify(invData));
             window.dispatchEvent(new Event('storage'));
-            showToast("庫存變更已即時同步至官網！");
             renderInventoryTable();
         }
 
         function renderInventoryTable() {
             const inventory = getStoredInventory();
             const tbody = document.getElementById('inventory-table-body');
+
+            if (!inventory || inventory.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="8" class="p-6 text-center text-gray-400">目前尚無商品，請點擊「上架新商品」新增。</td></tr>`;
+                document.getElementById('kpi-total-stock').innerText = `0 件`;
+                document.getElementById('kpi-total-value').innerText = `NT$ 0`;
+                document.getElementById('kpi-low-stock').innerText = `0 品項`;
+                document.getElementById('kpi-out-stock').innerText = `0 品項`;
+                return;
+            }
 
             let totalStock = 0;
             let totalValue = 0;
@@ -262,9 +364,12 @@
                                 </button>
                             </div>
                         </td>
-                        <td class="p-3 text-right">
-                            <button onclick="adjustStock(${item.id}, 5)" class="text-xs bg-brand-card text-brand-brown border border-brand-cream px-2.5 py-1 rounded-lg hover:border-brand-accent transition">
+                        <td class="p-3 text-right space-x-1">
+                            <button onclick="adjustStock(${item.id}, 5)" class="text-xs bg-brand-card text-brand-brown border border-brand-cream px-2 py-1 rounded-lg hover:border-brand-accent transition">
                                 +5 補貨
+                            </button>
+                            <button onclick="removeProduct(${item.id}, '${item.name}')" class="text-xs bg-red-50 text-red-600 border border-red-200 font-bold px-2 py-1 rounded-lg hover:bg-red-100 transition">
+                                🗑️ 下架
                             </button>
                         </td>
                     </tr>
@@ -278,12 +383,90 @@
             document.getElementById('kpi-out-stock').innerText = `${outOfStockCount} 品項`;
         }
 
+        // 🗑️ 下架商品功能 (徹底刪除)
+        function removeProduct(id, name) {
+            if (confirm(`確定要下架並徹底刪除「${name}」嗎？\n下架後前台官網 (index.html) 將不會再顯示該商品。`)) {
+                let inventory = getStoredInventory();
+                inventory = inventory.filter(p => p.id !== id);
+                saveInventory(inventory);
+                showToast(`商品「${name}」已成功下架！`);
+            }
+        }
+
+        // 🛍️ 開啟/關閉上架彈窗與圖片處理
+        function openAddProductModal() {
+            document.getElementById('add-product-modal').classList.remove('hidden');
+        }
+
+        function closeAddProductModal() {
+            document.getElementById('add-product-modal').classList.add('hidden');
+            clearProductImage();
+        }
+
+        function previewProductImage(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    uploadedImageBase64 = e.target.result;
+                    const imgPreview = document.getElementById('new-prod-img-preview');
+                    imgPreview.src = uploadedImageBase64;
+                    document.getElementById('img-preview-container').classList.remove('hidden');
+                    document.getElementById('remove-img-btn').classList.remove('hidden');
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        function clearProductImage() {
+            uploadedImageBase64 = '';
+            document.getElementById('new-prod-image-file').value = '';
+            document.getElementById('img-preview-container').classList.add('hidden');
+            document.getElementById('remove-img-btn').classList.add('hidden');
+            document.getElementById('new-prod-img-preview').src = '';
+        }
+
+        // 💾 提交上架新商品
+        function handleAddProductSubmit(e) {
+            e.preventDefault();
+            const name = document.getElementById('new-prod-name').value.trim();
+            const price = parseInt(document.getElementById('new-prod-price').value) || 0;
+            const stock = parseInt(document.getElementById('new-prod-stock').value) || 0;
+            const category = document.getElementById('new-prod-category').value;
+            const badge = document.getElementById('new-prod-badge').value.trim() || "新品上架";
+            const icon = document.getElementById('new-prod-icon').value;
+
+            let inventory = getStoredInventory();
+            const newId = inventory.length > 0 ? Math.max(...inventory.map(p => Number(p.id) || 0)) + 1 : 1;
+
+            const newProduct = {
+                id: newId,
+                name: name,
+                price: price,
+                isSale: false,
+                salePrice: null,
+                category: category,
+                badge: badge,
+                icon: icon,
+                image: uploadedImageBase64,
+                stock: stock
+            };
+
+            inventory.unshift(newProduct);
+            saveInventory(inventory);
+
+            e.target.reset();
+            closeAddProductModal();
+            showToast(`成功上架商品「${name}」！官網 (index.html) 已同步顯示。`);
+        }
+
         function adjustStock(productId, delta) {
             const inventory = getStoredInventory();
             const target = inventory.find(i => i.id === productId);
             if (target) {
                 target.stock = Math.max(0, (Number(target.stock) || 0) + delta);
                 saveInventory(inventory);
+                showToast("庫存已變更並同步至官網！");
             }
         }
 
@@ -293,6 +476,7 @@
             if (target) {
                 target.stock = Math.max(0, parseInt(newVal) || 0);
                 saveInventory(inventory);
+                showToast("庫存已變更並同步至官網！");
             }
         }
 
@@ -302,11 +486,13 @@
                 item.stock = (Number(item.stock) || 0) + amount;
             });
             saveInventory(inventory);
+            showToast("全品項已成功補貨！");
         }
 
         function resetToDefaultStock() {
             if (confirm("確定要將庫存還原為系統初始預設值嗎？")) {
                 saveInventory(defaultInventory);
+                showToast("庫存已還原為預設值！");
             }
         }
 
