@@ -510,8 +510,8 @@
                 if (stock === 0) {
                     stockBadge = `<span class="text-[11px] font-bold text-red-500 bg-red-50 px-2 py-0.5 rounded-full border border-red-200">❌ 已售罄</span>`;
                     buttonHtml = `<button disabled class="bg-gray-200 text-gray-400 text-xs px-3 py-1.5 rounded-md cursor-not-allowed">已售完</button>`;
-                } else if (stock < 8) {
-                    stockBadge = `<span class="text-[11px] font-bold text-amber-700 bg-amber-50 px-2 py-0.5 rounded-full border border-amber-200">⚠️ 剩餘 ${stock} 件</span>`;
+                } else if (stock < 5) {
+                    stockBadge = `<span class="text-[11px] font-bold text-amber-700 bg-amber-50 px-2 py-0.5 rounded-full border border-amber-200">🔥 即將完售 (剩餘 ${stock} 件)</span>`;
                     buttonHtml = `<button onclick="addToCart(${p.id})" class="bg-brand-accent text-white text-xs px-3 py-1.5 rounded-md hover:bg-opacity-90 transition">+ 加入購物車</button>`;
                 } else {
                     stockBadge = `<span class="text-[11px] text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">庫存 ${stock} 件</span>`;
