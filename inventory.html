@@ -45,7 +45,7 @@
                 <div>
                     <h1 class="font-serif font-bold text-lg text-brand-brown leading-tight">CÔTE À CÔTE 庫存管理中心</h1>
                     <p class="text-[10px] text-brand-muted truncate max-w-xs sm:max-w-md">
-                        實時連動官網商品庫存數量 (index.html)
+                        實時連動官網商品庫存與促銷價格 (index.html)
                     </p>
                 </div>
             </div>
@@ -85,13 +85,13 @@
             </div>
 
             <div class="bg-white p-5 rounded-2xl border border-brand-cream shadow-sm">
-                <div class="text-xs text-brand-muted mb-1 font-medium">庫存總總價值</div>
+                <div class="text-xs text-brand-muted mb-1 font-medium">庫存總估算價值</div>
                 <div id="kpi-total-value" class="text-3xl font-bold text-brand-brown font-mono">NT$ 0</div>
-                <p class="text-[11px] text-gray-400 mt-1">以單價成本計算</p>
+                <p class="text-[11px] text-gray-400 mt-1">以實際銷售/促銷單價計算</p>
             </div>
 
             <div class="bg-white p-5 rounded-2xl border border-brand-cream shadow-sm">
-                <div class="text-xs text-brand-muted mb-1 font-medium">低庫存預警 (< 8件)</div>
+                <div class="text-xs text-brand-muted mb-1 font-medium">低庫存預警 (&lt; 8件)</div>
                 <div id="kpi-low-stock" class="text-3xl font-bold text-amber-600 font-mono">0 品項</div>
                 <p class="text-[11px] text-amber-600/80 mt-1">建議及時安排進貨</p>
             </div>
@@ -126,12 +126,13 @@
                     <thead>
                         <tr class="border-b border-brand-cream text-brand-muted uppercase bg-brand-bg">
                             <th class="p-3">商品編號</th>
-                            <th class="p-3">商品名稱</th>
-                            <th class="p-3">商品分類</th>
-                            <th class="p-3">銷售單價</th>
+                            <th class="p-3">縮圖/圖示</th>
+                            <th class="p-3">商品名稱 (Pinkoi 設計館風格)</th>
+                            <th class="p-3">分類</th>
+                            <th class="p-3">當前售價 / 促銷狀態</th>
                             <th class="p-3">庫存狀態</th>
                             <th class="p-3 text-center">當前庫存量調整</th>
-                            <th class="p-3 text-right">操作</th>
+                            <th class="p-3 text-right">快速操作</th>
                         </tr>
                     </thead>
                     <tbody id="inventory-table-body" class="divide-y divide-gray-100">
@@ -143,25 +144,25 @@
     </main>
 
     <!-- Toast Notification -->
-    <div id="toast-msg" class="fixed bottom-4 right-4 bg-brand-brown text-white px-4 py-2.5 rounded-xl text-xs shadow-xl hidden transition-all duration-300">
+    <div id="toast-msg" class="fixed bottom-4 right-4 bg-brand-brown text-white px-4 py-2.5 rounded-xl text-xs shadow-xl hidden transition-all duration-300 z-50">
         ✨ 庫存數據已成功更新並連動至官網！
     </div>
 
     <script>
-        // 預設商品庫存資料庫
+        // 參考 Pinkoi 設計館 (CÔTE À CÔTE 身邊的小東西) 風格的預設商品清單
         const defaultInventory = [
-            { id: 1, name: "【客製刺繡】涼夏風兒輕輕吹口水巾", price: 430, category: "口水巾", stock: 15 },
-            { id: 2, name: "【客製刺繡-3件組】我和寶寶的第一場初雪彌月禮盒", price: 1290, category: "彌月禮盒", stock: 8 },
-            { id: 3, name: "【客製刺繡】花海野餐蕾絲荷葉奶嘴夾", price: 170, category: "奶嘴夾與配件", stock: 25 },
-            { id: 4, name: "優雅公主復古蕾絲髮帶 3件組", price: 190, category: "奶嘴夾與配件", stock: 30 },
-            { id: 5, name: "【客製刺繡】我愛我的生日兔子寶寶六層紗手帕", price: 210, category: "口水巾", stock: 6 },
-            { id: 6, name: "【客製刺繡-2件組】小天使與小惡魔立體翅膀口水巾", price: 830, category: "彌月禮盒", stock: 3 }
+            { id: 1, name: "【客製刺繡】涼夏風兒輕輕吹口水巾", price: 430, isSale: false, salePrice: null, category: "口水巾", icon: "🧣", image: "", stock: 15 },
+            { id: 2, name: "【客製刺繡-3件組】我和寶寶的第一場初雪彌月禮盒", price: 1290, isSale: true, salePrice: 1180, category: "彌月禮盒", icon: "🎁", image: "", stock: 8 },
+            { id: 3, name: "【客製刺繡】花海野餐蕾絲荷葉奶嘴夾", price: 170, isSale: false, salePrice: null, category: "奶嘴夾與配件", icon: "📎", image: "", stock: 25 },
+            { id: 4, name: "優雅公主復古蕾絲髮帶 3件組", price: 190, isSale: false, salePrice: null, category: "奶嘴夾與配件", icon: "🎀", image: "", stock: 30 },
+            { id: 5, name: "【客製刺繡】我愛我的生日兔子寶寶六層紗手帕", price: 210, isSale: false, salePrice: null, category: "口水巾", icon: "🐰", image: "", stock: 6 },
+            { id: 6, name: "【客製刺繡-2件組】小天使與小惡魔立體翅膀口水巾", price: 830, isSale: true, salePrice: 750, category: "彌月禮盒", icon: "👼", image: "", stock: 3 }
         ];
 
         window.addEventListener('DOMContentLoaded', () => {
             renderInventoryTable();
 
-            // 監聽來自 index.html 銷售下單導致的 localStorage 變化
+            // 監聽來自 index.html 或 admin.html 導致的 localStorage 變化
             window.addEventListener('storage', (e) => {
                 if (e.key === 'coteacote_inventory') {
                     document.getElementById('stock-sale-alert').classList.remove('hidden');
@@ -185,7 +186,6 @@
 
         function saveInventory(invData) {
             localStorage.setItem('coteacote_inventory', JSON.stringify(invData));
-            // 觸發自訂事件以便同分頁即時連動
             window.dispatchEvent(new Event('storage'));
             showToast("庫存變更已即時同步至官網！");
             renderInventoryTable();
@@ -195,17 +195,26 @@
             const inventory = getStoredInventory();
             const tbody = document.getElementById('inventory-table-body');
 
-            // KPI 計算
             let totalStock = 0;
             let totalValue = 0;
             let lowStockCount = 0;
             let outOfStockCount = 0;
 
+            const catMap = { bib: '口水巾', gift: '彌月禮盒', accessories: '奶嘴夾與配件' };
+
             tbody.innerHTML = inventory.map(item => {
                 const stock = Number(item.stock) || 0;
+                const effectivePrice = (item.isSale && item.salePrice) ? Number(item.salePrice) : Number(item.price);
+                
                 totalStock += stock;
-                totalValue += stock * (Number(item.price) || 0);
+                totalValue += stock * effectivePrice;
 
+                // 媒體圖示或圖片
+                const media = item.image 
+                    ? `<img src="${item.image}" class="w-10 h-10 object-cover rounded-lg border border-brand-cream">`
+                    : `<span class="text-2xl">${item.icon || '🧸'}</span>`;
+
+                // 庫存狀態標籤
                 let statusBadge = '';
                 if (stock === 0) {
                     outOfStockCount++;
@@ -217,12 +226,29 @@
                     statusBadge = `<span class="bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-md text-[11px] font-bold">供應充足</span>`;
                 }
 
+                // 售價顯示邏輯 (含促銷特價)
+                let priceDisplay = '';
+                if (item.isSale && item.salePrice) {
+                    priceDisplay = `
+                        <div>
+                            <span class="text-gray-400 line-through text-[11px]">NT$ ${item.price}</span>
+                            <span class="font-mono font-bold text-red-600 ml-1">NT$ ${item.salePrice}</span>
+                            <span class="text-[10px] bg-red-100 text-red-700 font-bold px-1 py-0.2 rounded ml-1">促銷</span>
+                        </div>
+                    `;
+                } else {
+                    priceDisplay = `<span class="font-mono font-bold text-brand-brown">NT$ ${item.price}</span>`;
+                }
+
+                const catName = catMap[item.category] || item.category;
+
                 return `
                     <tr class="hover:bg-brand-bg transition">
                         <td class="p-3 font-mono font-bold text-gray-400">#COT-00${item.id}</td>
+                        <td class="p-3">${media}</td>
                         <td class="p-3 font-medium text-brand-brown">${item.name}</td>
-                        <td class="p-3 text-gray-500">${item.category}</td>
-                        <td class="p-3 font-mono font-bold text-brand-brown">NT$ ${item.price}</td>
+                        <td class="p-3 text-gray-500">${catName}</td>
+                        <td class="p-3">${priceDisplay}</td>
                         <td class="p-3">${statusBadge}</td>
                         <td class="p-3 text-center">
                             <div class="inline-flex items-center space-x-1 bg-brand-card p-1 rounded-xl border border-brand-cream">
