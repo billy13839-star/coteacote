@@ -49,7 +49,7 @@
     </div>
 
     <!-- Navigation Header -->
-    <header class="sticky top-0 z-50 bg-[#FDFBF7]/90 backdrop-blur-md border-b border-[#EAE2D6]">
+    <header class="sticky top-0 z-40 bg-[#FDFBF7]/90 backdrop-blur-md border-b border-[#EAE2D6]">
         <div class="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
             <div class="flex items-center space-x-6">
                 <a href="#" class="text-2xl font-serif font-bold tracking-widest text-[#6D5B4F]">CÔTE À CÔTE</a>
@@ -158,7 +158,7 @@
     <section id="products" class="max-w-6xl mx-auto px-4 py-8">
         <div class="text-center mb-8">
             <h2 class="text-2xl font-serif font-bold text-brand-brown">熱門手作商品</h2>
-            <p class="text-xs text-brand-muted mt-1">選用溫和無毒面料，即時顯示庫存剩餘數量</p>
+            <p class="text-xs text-brand-muted mt-1">選用溫和無毒面料，點擊商品即可設定刺繡與選購數量</p>
         </div>
 
         <!-- Filter Tabs -->
@@ -205,6 +205,89 @@
             <p class="text-gray-400 pt-4 border-t border-gray-600">© 2026 CÔTE À CÔTE. All rights reserved.</p>
         </div>
     </footer>
+
+    <!-- 🔍 商品詳細資訊與客製刺繡 Modal -->
+    <div id="product-detail-modal" class="fixed inset-0 bg-black/50 z-50 hidden flex items-center justify-center p-4 overflow-y-auto">
+        <div class="bg-white rounded-2xl max-w-2xl w-full p-6 md:p-8 shadow-2xl relative border border-brand-cream max-h-[90vh] overflow-y-auto my-8">
+            <button onclick="closeProductDetailModal()" class="absolute top-4 right-4 text-gray-400 hover:text-brand-brown text-2xl z-10">✕</button>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- 放大圖片展示區 -->
+                <div class="bg-brand-card rounded-2xl border border-brand-cream flex items-center justify-center p-4 h-64 md:h-80 relative overflow-hidden shadow-inner">
+                    <div id="detail-img-container" class="w-full h-full flex items-center justify-center">
+                        <!-- Populated via JS -->
+                    </div>
+                    <span id="detail-badge" class="absolute top-3 left-3 bg-brand-muted text-white text-xs px-2.5 py-1 rounded-full shadow-sm">
+                        熱銷
+                    </span>
+                </div>
+
+                <!-- 商品屬性與刺繡客製設定 -->
+                <div class="flex flex-col justify-between space-y-4">
+                    <div>
+                        <span id="detail-category" class="text-xs text-brand-accent font-bold uppercase tracking-wider">口水巾</span>
+                        <h2 id="detail-name" class="text-xl font-serif font-bold text-brand-brown mt-1 leading-snug">商品名稱</h2>
+                        <div class="mt-2 flex items-baseline gap-2">
+                            <span id="detail-price" class="text-2xl font-bold font-mono text-brand-brown">NT$ 0</span>
+                            <span id="detail-original-price" class="text-xs text-gray-400 line-through hidden">NT$ 0</span>
+                        </div>
+                        <p id="detail-stock-info" class="text-xs text-emerald-600 font-medium mt-1">目前庫存剩餘 15 件</p>
+                    </div>
+
+                    <!-- 🪡 刺繡姓名與字型設定區 -->
+                    <div class="bg-brand-card p-4 rounded-xl border border-brand-cream space-y-3">
+                        <div class="flex items-center justify-between">
+                            <label class="text-xs font-bold text-brand-brown flex items-center gap-1">
+                                <span>🪡</span>
+                                <span>客製化刺繡寶寶名字</span>
+                            </label>
+                            <div class="flex text-[10px] gap-1">
+                                <button type="button" id="detail-lang-en" onclick="setDetailEmbroideryLang('en')" class="px-2 py-0.5 rounded-full font-bold bg-brand-accent text-white">英文</button>
+                                <button type="button" id="detail-lang-zh" onclick="setDetailEmbroideryLang('zh')" class="px-2 py-0.5 rounded-full font-bold bg-white text-brand-brown border border-brand-cream">中文</button>
+                            </div>
+                        </div>
+
+                        <!-- 名字輸入框 -->
+                        <input type="text" id="detail-custom-name" placeholder="請輸入刺繡名字 (例如: Olivia)" oninput="updateDetailEmbroideryPreview()"
+                               class="w-full px-3 py-2 border border-brand-cream rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-brand-accent bg-white">
+
+                        <!-- 字型選擇器 -->
+                        <div>
+                            <span class="text-[11px] text-brand-muted block mb-1">選擇刺繡風格字型：</span>
+                            <div id="detail-font-options" class="grid grid-cols-2 gap-2">
+                                <!-- Populated dynamically based on lang -->
+                            </div>
+                        </div>
+
+                        <!-- 刺繡效果實時預覽 -->
+                        <div class="bg-[#EAE2D6] p-2.5 rounded-lg text-center shadow-inner relative">
+                            <span class="text-[9px] text-brand-muted absolute top-1 left-2">刺繡預覽</span>
+                            <span id="detail-embroidery-preview-text" class="text-lg text-brand-brown font-sauber-script tracking-wider block mt-1">
+                                Olivia
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- 數量選擇與購買 -->
+                    <div class="space-y-3">
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs font-bold text-brand-brown">購買數量：</span>
+                            <div class="flex items-center space-x-2 bg-brand-card p-1 rounded-xl border border-brand-cream">
+                                <button onclick="adjustDetailQty(-1)" class="w-8 h-8 bg-white rounded-lg border border-brand-cream font-bold hover:bg-gray-100 flex items-center justify-center text-sm">-</button>
+                                <input type="number" id="detail-qty" value="1" min="1" readonly class="w-12 text-center bg-transparent font-mono font-bold text-brand-brown text-sm">
+                                <button onclick="adjustDetailQty(1)" class="w-8 h-8 bg-white rounded-lg border border-brand-cream font-bold hover:bg-gray-100 flex items-center justify-center text-sm">+</button>
+                            </div>
+                        </div>
+
+                        <button id="detail-add-cart-btn" onclick="submitDetailAddToCart()" class="w-full bg-brand-accent text-white py-3 rounded-xl font-bold text-sm hover:bg-opacity-90 transition shadow-md flex items-center justify-center gap-2">
+                            <span>🛒</span>
+                            <span>加入購物車</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <!-- Cart Slide-over Modal -->
     <div id="cart-modal" class="fixed inset-0 bg-black/40 z-50 hidden flex justify-end">
@@ -353,12 +436,12 @@
     <script>
         // 預設商品清單與預設庫存
         const defaultProducts = [
-            { id: 1, name: "【客製刺繡】涼夏風兒輕輕吹口水巾", price: 430, category: "bib", badge: "熱銷組", icon: "🧣", image: "", stock: 15 },
-            { id: 2, name: "【客製刺繡-3件組】我和寶寶的第一場初雪彌月禮盒", price: 1290, category: "gift", badge: "經典禮盒", icon: "🎁", image: "", stock: 8 },
-            { id: 3, name: "【客製刺繡】花海野餐蕾絲荷葉奶嘴夾", price: 170, category: "accessories", badge: "手作限定", icon: "📎", image: "", stock: 25 },
-            { id: 4, name: "優雅公主復古蕾絲髮帶 3件組", price: 190, category: "accessories", badge: "人氣單品", icon: "🎀", image: "", stock: 30 },
-            { id: 5, name: "【客製刺繡】我愛我的生日兔子寶寶六層紗手帕", price: 210, category: "bib", badge: "親膚推薦", icon: "🐰", image: "", stock: 6 },
-            { id: 6, name: "【客製刺繡-2件組】小天使與小惡魔立體翅膀口水巾", price: 830, category: "gift", badge: "彌月首選", icon: "👼", image: "", stock: 3 }
+            { id: 1, name: "【客製刺繡】涼夏風兒輕輕吹口水巾", price: 430, isSale: false, salePrice: null, category: "bib", badge: "熱銷組", icon: "🧣", image: "", stock: 15 },
+            { id: 2, name: "【客製刺繡-3件組】我和寶寶的第一場初雪彌月禮盒", price: 1290, isSale: true, salePrice: 1180, category: "gift", badge: "經典禮盒", icon: "🎁", image: "", stock: 8 },
+            { id: 3, name: "【客製刺繡】花海野餐蕾絲荷葉奶嘴夾", price: 170, isSale: false, salePrice: null, category: "accessories", badge: "手作限定", icon: "📎", image: "", stock: 25 },
+            { id: 4, name: "優雅公主復古蕾絲髮帶 3件組", price: 190, isSale: false, salePrice: null, category: "accessories", badge: "人氣單品", icon: "🎀", image: "", stock: 30 },
+            { id: 5, name: "【客製刺繡】我愛我的生日兔子寶寶六層紗手帕", price: 210, isSale: false, salePrice: null, category: "bib", badge: "親膚推薦", icon: "🐰", image: "", stock: 6 },
+            { id: 6, name: "【客製刺繡-2件組】小天使與小惡魔立體翅膀口水巾", price: 830, isSale: true, salePrice: 750, category: "gift", badge: "彌月首選", icon: "👼", image: "", stock: 3 }
         ];
 
         let cart = [];
@@ -366,9 +449,14 @@
         let currentPayment = 'credit';
         let currentCategoryFilter = 'all';
 
-        // 刺繡預覽控制參數
+        // 刺繡預覽控制參數 (頂部全區)
         let currentEmbroideryLang = 'en';
         let currentEmbroideryFont = 'sauber';
+
+        // 彈窗專用暫存
+        let currentActiveProduct = null;
+        let detailEmbroideryLang = 'en';
+        let detailEmbroideryFont = 'sauber';
 
         // 取得庫存與商品資料庫
         function getInventory() {
@@ -392,7 +480,7 @@
             });
         });
 
-        // 🪡 刺繡語言與字型切換
+        // 🪡 刺繡語言與字型切換 (頂部全區預覽)
         function switchEmbroideryLang(lang) {
             currentEmbroideryLang = lang;
             const btnEn = document.getElementById('lang-btn-en');
@@ -426,7 +514,6 @@
             const previewEl = document.getElementById('embroidery-preview');
             const tagEl = document.getElementById('preview-tag-info');
 
-            // 按鈕樣式重置
             ['sauber', 'yeonsung', 'handwriting', 'wawa'].forEach(f => {
                 const btn = document.getElementById(`font-btn-${f}`);
                 if (btn) {
@@ -440,7 +527,6 @@
                 }
             });
 
-            // 設定預覽字型 Class 與標籤
             previewEl.className = 'text-2xl md:text-3xl text-brand-brown tracking-widest transition-all duration-300 ';
             if (fontKey === 'sauber') {
                 previewEl.classList.add('font-sauber-script');
@@ -462,6 +548,174 @@
         function updatePreview(text) {
             const previewEl = document.getElementById('embroidery-preview');
             previewEl.innerText = text.trim() === '' ? (currentEmbroideryLang === 'en' ? 'Baby Name' : '小寶貝') : text;
+        }
+
+        // 🔍 商品詳情 Modal 控制與刺繡預覽
+        function openProductDetailModal(id) {
+            const inventory = getInventory();
+            const item = inventory.find(p => p.id === id);
+            if (!item) return;
+
+            currentActiveProduct = item;
+
+            // 填寫基本資料
+            document.getElementById('detail-name').innerText = item.name;
+            document.getElementById('detail-category').innerText = item.category === 'bib' ? '口水巾' : (item.category === 'gift' ? '彌月禮盒' : '奶嘴夾與配件');
+            document.getElementById('detail-badge').innerText = item.badge || '熱銷';
+
+            // 價格與促銷處理
+            const effectivePrice = (item.isSale && item.salePrice) ? Number(item.salePrice) : Number(item.price);
+            document.getElementById('detail-price').innerText = `NT$ ${effectivePrice}`;
+            const origPriceEl = document.getElementById('detail-original-price');
+            if (item.isSale && item.salePrice) {
+                origPriceEl.innerText = `NT$ ${item.price}`;
+                origPriceEl.classList.remove('hidden');
+            } else {
+                origPriceEl.classList.add('hidden');
+            }
+
+            // 圖片放大展示
+            const imgContainer = document.getElementById('detail-img-container');
+            if (item.image) {
+                imgContainer.innerHTML = `<img src="${item.image}" alt="${item.name}" class="w-full h-full object-cover rounded-xl shadow-sm">`;
+            } else {
+                imgContainer.innerHTML = `<span class="text-7xl">${item.icon || "🧸"}</span>`;
+            }
+
+            // 庫存與數量重置
+            const stock = Number(item.stock) || 0;
+            const stockInfo = document.getElementById('detail-stock-info');
+            const addBtn = document.getElementById('detail-add-cart-btn');
+
+            if (stock === 0) {
+                stockInfo.innerText = "❌ 此商品目前已售罄缺貨中";
+                stockInfo.className = "text-xs text-red-500 font-bold mt-1";
+                addBtn.disabled = true;
+                addBtn.className = "w-full bg-gray-200 text-gray-400 py-3 rounded-xl font-bold text-sm cursor-not-allowed";
+            } else {
+                stockInfo.innerText = `目前庫存剩餘 ${stock} 件`;
+                stockInfo.className = "text-xs text-emerald-600 font-medium mt-1";
+                addBtn.disabled = false;
+                addBtn.className = "w-full bg-brand-accent text-white py-3 rounded-xl font-bold text-sm hover:bg-opacity-90 transition shadow-md flex items-center justify-center gap-2";
+            }
+
+            document.getElementById('detail-qty').value = "1";
+
+            // 初始化彈窗內刺繡語言與預設名字
+            setDetailEmbroideryLang('en');
+
+            document.getElementById('product-detail-modal').classList.remove('hidden');
+        }
+
+        function closeProductDetailModal() {
+            document.getElementById('product-detail-modal').classList.add('hidden');
+        }
+
+        function adjustDetailQty(delta) {
+            if (!currentActiveProduct) return;
+            const input = document.getElementById('detail-qty');
+            let currentVal = parseInt(input.value) || 1;
+            const maxStock = Number(currentActiveProduct.stock) || 0;
+
+            currentVal += delta;
+            if (currentVal < 1) currentVal = 1;
+            if (currentVal > maxStock) {
+                currentVal = maxStock;
+                showToast(`超過此商品目前最大庫存 (${maxStock} 件)`);
+            }
+            input.value = currentVal;
+        }
+
+        function setDetailEmbroideryLang(lang) {
+            detailEmbroideryLang = lang;
+            const btnEn = document.getElementById('detail-lang-en');
+            const btnZh = document.getElementById('detail-lang-zh');
+            const fontOptionsContainer = document.getElementById('detail-font-options');
+            const customNameInput = document.getElementById('detail-custom-name');
+
+            if (lang === 'en') {
+                btnEn.className = "px-2 py-0.5 rounded-full font-bold bg-brand-accent text-white";
+                btnZh.className = "px-2 py-0.5 rounded-full font-bold bg-white text-brand-brown border border-brand-cream";
+                customNameInput.placeholder = "請輸入英文名字 (例如: Olivia)";
+                customNameInput.value = "Olivia";
+                
+                fontOptionsContainer.innerHTML = `
+                    <button type="button" onclick="setDetailEmbroideryFont('sauber')" id="dfont-sauber" class="px-2 py-1.5 rounded-lg text-xs border font-sauber-script bg-white border-brand-accent text-brand-brown font-bold">✨ Sauber Script</button>
+                    <button type="button" onclick="setDetailEmbroideryFont('yeonsung')" id="dfont-yeonsung" class="px-2 py-1.5 rounded-lg text-xs border font-bm-yeonsung bg-white border-brand-cream text-gray-600">🎨 BM Yeonsung</button>
+                `;
+                setDetailEmbroideryFont('sauber');
+            } else {
+                btnZh.className = "px-2 py-0.5 rounded-full font-bold bg-brand-accent text-white";
+                btnEn.className = "px-2 py-0.5 rounded-full font-bold bg-white text-brand-brown border border-brand-cream";
+                customNameInput.placeholder = "請輸入中文名字 (例如: 妮妮)";
+                customNameInput.value = "妮妮";
+
+                fontOptionsContainer.innerHTML = `
+                    <button type="button" onclick="setDetailEmbroideryFont('handwriting')" id="dfont-handwriting" class="px-2 py-1.5 rounded-lg text-xs border font-handwriting-tc bg-white border-brand-accent text-brand-brown font-bold">✍️ 手札體</button>
+                    <button type="button" onclick="setDetailEmbroideryFont('wawa')" id="dfont-wawa" class="px-2 py-1.5 rounded-lg text-xs border font-wawa-tc bg-white border-brand-cream text-gray-600">🧸 娃娃體</button>
+                `;
+                setDetailEmbroideryFont('handwriting');
+            }
+        }
+
+        function setDetailEmbroideryFont(fontKey) {
+            detailEmbroideryFont = fontKey;
+            const previewText = document.getElementById('detail-embroidery-preview-text');
+
+            ['sauber', 'yeonsung', 'handwriting', 'wawa'].forEach(f => {
+                const btn = document.getElementById(`dfont-${f}`);
+                if (btn) {
+                    if (f === fontKey) {
+                        btn.className = `px-2 py-1.5 rounded-lg text-xs border font-${f === 'sauber' ? 'sauber-script' : (f === 'yeonsung' ? 'bm-yeonsung' : (f === 'handwriting' ? 'handwriting-tc' : 'wawa-tc'))} bg-white border-brand-accent text-brand-brown font-bold shadow-sm`;
+                    } else {
+                        btn.className = `px-2 py-1.5 rounded-lg text-xs border font-${f === 'sauber' ? 'sauber-script' : (f === 'yeonsung' ? 'bm-yeonsung' : (f === 'handwriting' ? 'handwriting-tc' : 'wawa-tc'))} bg-white border-brand-cream text-gray-600`;
+                    }
+                }
+            });
+
+            previewText.className = 'text-lg text-brand-brown tracking-wider block mt-1 ';
+            if (fontKey === 'sauber') previewText.classList.add('font-sauber-script');
+            else if (fontKey === 'yeonsung') previewText.classList.add('font-bm-yeonsung');
+            else if (fontKey === 'handwriting') previewText.classList.add('font-handwriting-tc');
+            else if (fontKey === 'wawa') previewText.classList.add('font-wawa-tc');
+
+            updateDetailEmbroideryPreview();
+        }
+
+        function updateDetailEmbroideryPreview() {
+            const inputVal = document.getElementById('detail-custom-name').value;
+            const previewText = document.getElementById('detail-embroidery-preview-text');
+            previewText.innerText = inputVal.trim() === '' ? (detailEmbroideryLang === 'en' ? 'Olivia' : '妮妮') : inputVal;
+        }
+
+        function submitDetailAddToCart() {
+            if (!currentActiveProduct) return;
+            const qty = parseInt(document.getElementById('detail-qty').value) || 1;
+            const customName = document.getElementById('detail-custom-name').value.trim() || (detailEmbroideryLang === 'en' ? 'Olivia' : '妮妮');
+
+            // 檢查庫存數量限制
+            const currentCartQty = cart.filter(c => c.id === currentActiveProduct.id).reduce((sum, item) => sum + (item.qty || 1), 0);
+            if (currentCartQty + qty > currentActiveProduct.stock) {
+                showToast(`無法加入！購物車加上本次數量將超過庫存數量 (${currentActiveProduct.stock} 件)`);
+                return;
+            }
+
+            const effectivePrice = (currentActiveProduct.isSale && currentActiveProduct.salePrice) ? Number(currentActiveProduct.salePrice) : Number(currentActiveProduct.price);
+
+            const fontNameMap = { sauber: 'Sauber Script', yeonsung: 'BM Yeonsung', handwriting: '手札體', wawa: '娃娃體' };
+
+            for (let i = 0; i < qty; i++) {
+                cart.push({
+                    id: currentActiveProduct.id,
+                    name: `${currentActiveProduct.name} (刺繡: ${customName} / ${fontNameMap[detailEmbroideryFont]})`,
+                    price: effectivePrice,
+                    qty: 1
+                });
+            }
+
+            updateCart();
+            closeProductDetailModal();
+            showToast(`成功加入 ${qty} 件「${currentActiveProduct.name}」至購物車！`);
         }
 
         function showToast(msg) {
@@ -568,12 +822,11 @@
             showToast('下單成功！已扣除對應庫存量並發送至庫存系統。');
         }
 
-        // 🖼️ 渲染商品列表（支援顯示圖片與 Emoji 退回機制）
+        // 🖼️ 渲染商品列表（點擊卡片開啟詳情 Modal）
         function renderProducts() {
             const grid = document.getElementById('product-grid');
             const inventory = getInventory();
 
-            // 依分類篩選
             let displayList = inventory;
             if (currentCategoryFilter !== 'all') {
                 displayList = inventory.filter(p => p.category === currentCategoryFilter);
@@ -582,26 +835,34 @@
             grid.innerHTML = displayList.map(p => {
                 const stock = Number(p.stock) || 0;
                 let stockBadge = '';
-                let buttonHtml = '';
 
                 if (stock === 0) {
                     stockBadge = `<span class="text-[11px] font-bold text-red-500 bg-red-50 px-2 py-0.5 rounded-full border border-red-200">❌ 已售罄</span>`;
-                    buttonHtml = `<button disabled class="bg-gray-200 text-gray-400 text-xs px-3 py-1.5 rounded-md cursor-not-allowed">已售完</button>`;
                 } else if (stock < 5) {
-                    stockBadge = `<span class="text-[11px] font-bold text-amber-700 bg-amber-50 px-2 py-0.5 rounded-full border border-amber-200">🔥 即將完售 (剩餘 ${stock} 件)</span>`;
-                    buttonHtml = `<button onclick="addToCart(${p.id})" class="bg-brand-accent text-white text-xs px-3 py-1.5 rounded-md hover:bg-opacity-90 transition">+ 加入購物車</button>`;
+                    stockBadge = `<span class="text-[11px] font-bold text-amber-700 bg-amber-50 px-2 py-0.5 rounded-full border border-amber-200">🔥 剩餘 ${stock} 件</span>`;
                 } else {
                     stockBadge = `<span class="text-[11px] text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">庫存 ${stock} 件</span>`;
-                    buttonHtml = `<button onclick="addToCart(${p.id})" class="bg-brand-accent text-white text-xs px-3 py-1.5 rounded-md hover:bg-opacity-90 transition">+ 加入購物車</button>`;
                 }
 
-                // 🖼️ 判斷若有圖片則顯示圖片，無圖片則顯示 Emoji
+                // 價格與促銷邏輯
+                let priceHtml = '';
+                if (p.isSale && p.salePrice) {
+                    priceHtml = `
+                        <div>
+                            <span class="text-xs text-gray-400 line-through">NT$ ${p.price}</span>
+                            <span class="text-sm font-bold text-red-600 font-mono ml-1">NT$ ${p.salePrice}</span>
+                        </div>
+                    `;
+                } else {
+                    priceHtml = `<span class="text-sm font-bold text-brand-brown font-mono">NT$ ${p.price}</span>`;
+                }
+
                 const mediaContent = p.image 
                     ? `<img src="${p.image}" alt="${p.name}" class="w-full h-full object-cover rounded-lg">`
                     : `<span class="text-5xl">${p.icon || "🧸"}</span>`;
 
                 return `
-                    <div class="bg-white rounded-xl p-4 shadow-sm border border-brand-cream flex flex-col justify-between hover:shadow-md transition">
+                    <div onclick="openProductDetailModal(${p.id})" class="bg-white rounded-xl p-4 shadow-sm border border-brand-cream flex flex-col justify-between hover:shadow-md transition cursor-pointer group">
                         <div>
                             <div class="h-40 bg-brand-card rounded-lg flex items-center justify-center mb-4 relative overflow-hidden">
                                 ${mediaContent}
@@ -610,11 +871,13 @@
                             <div class="flex items-center justify-between mb-1">
                                 ${stockBadge}
                             </div>
-                            <h3 class="font-medium text-sm text-brand-brown leading-snug">${p.name}</h3>
+                            <h3 class="font-medium text-sm text-brand-brown leading-snug group-hover:text-brand-accent transition">${p.name}</h3>
                         </div>
                         <div class="mt-4 flex items-center justify-between border-t border-gray-100 pt-3">
-                            <span class="text-sm font-bold text-brand-brown">NT$ ${p.price}</span>
-                            ${buttonHtml}
+                            ${priceHtml}
+                            <span class="text-xs bg-brand-card text-brand-brown px-3 py-1.5 rounded-lg border border-brand-cream group-hover:bg-brand-accent group-hover:text-white transition font-medium">
+                                🔍 快速查看 / 刺繡
+                            </span>
                         </div>
                     </div>
                 `;
@@ -626,38 +889,31 @@
             renderProducts();
         }
 
-        function addToCart(id) {
-            const inventory = getInventory();
-            const item = inventory.find(p => p.id === id);
-            
-            // 檢查購物車內該商品數量是否超過庫存
-            const currentCartCount = cart.filter(c => c.id === id).length;
-            if (item) {
-                if (currentCartCount >= item.stock) {
-                    showToast(`非常抱歉！「${item.name}」目前庫存僅剩 ${item.stock} 件，無法再增加。`);
-                    return;
-                }
-                cart.push(item);
-                updateCart();
-                showToast(`已將「${item.name}」加入購物車！`);
-            }
-        }
-
         function updateCart() {
             document.getElementById('cart-count').innerText = cart.length;
             const itemsContainer = document.getElementById('cart-items');
             if (cart.length === 0) {
                 itemsContainer.innerHTML = '<p class="text-xs text-gray-400 text-center py-8">購物車目前是空的</p>';
             } else {
-                itemsContainer.innerHTML = cart.map(item => `
+                itemsContainer.innerHTML = cart.map((item, idx) => `
                     <div class="flex items-center justify-between text-xs border-b pb-2">
-                        <span>${item.name}</span>
-                        <span class="font-bold">NT$ ${item.price}</span>
+                        <div class="pr-2">
+                            <span class="font-bold text-brand-brown block">${item.name}</span>
+                        </div>
+                        <div class="flex items-center gap-2 shrink-0">
+                            <span class="font-bold text-brand-accent">NT$ ${item.price}</span>
+                            <button onclick="removeFromCart(${idx})" class="text-red-400 hover:text-red-600 font-bold">✕</button>
+                        </div>
                     </div>
                 `).join('');
             }
             const total = cart.reduce((sum, i) => sum + i.price, 0);
             document.getElementById('cart-total').innerText = `NT$ ${total}`;
+        }
+
+        function removeFromCart(index) {
+            cart.splice(index, 1);
+            updateCart();
         }
 
         function toggleCart() {
