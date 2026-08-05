@@ -162,6 +162,37 @@
             </div>
         </div>
 
+        <!-- 🏷️ 商品上架與下架管理專區 (NEW) -->
+        <div class="bg-white p-6 rounded-2xl border border-brand-cream shadow-sm">
+            <div class="flex items-center justify-between mb-4">
+                <div>
+                    <h3 class="font-serif font-bold text-base text-brand-brown">📦 現有上架商品與庫存管理</h3>
+                    <p class="text-xs text-brand-muted">即時監控所有商品狀態，可進行下架（徹底移除）或調整庫存</p>
+                </div>
+                <button onclick="openAddProductModal()" class="text-xs bg-brand-accent text-white font-bold px-3 py-1.5 rounded-lg shadow-sm hover:bg-opacity-90 transition">
+                    ➕ 上架新商品
+                </button>
+            </div>
+
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse text-xs">
+                    <thead>
+                        <tr class="border-b border-brand-cream text-brand-muted uppercase bg-brand-bg">
+                            <th class="p-3">縮圖/圖示</th>
+                            <th class="p-3">商品名稱</th>
+                            <th class="p-3">分類</th>
+                            <th class="p-3">單價</th>
+                            <th class="p-3">目前庫存</th>
+                            <th class="p-3 text-right">操作選項</th>
+                        </tr>
+                    </thead>
+                    <tbody id="inventory-manage-table-body" class="divide-y divide-gray-100">
+                        <!-- Populated dynamically -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
         <!-- Revenue Analytics Chart -->
         <div class="bg-white p-6 rounded-2xl border border-brand-cream shadow-sm">
             <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
@@ -242,7 +273,7 @@
 
     </main>
 
-    <!-- Add Product Modal (已加入圖片上傳) -->
+    <!-- Add Product Modal -->
     <div id="add-product-modal" class="fixed inset-0 bg-black/40 z-50 hidden flex items-center justify-center p-4 overflow-y-auto">
         <div class="bg-white rounded-2xl max-w-lg w-full p-6 md:p-8 shadow-2xl relative border border-brand-cream my-8 max-h-[90vh] overflow-y-auto">
             <button onclick="closeAddProductModal()" class="absolute top-4 right-4 text-gray-400 hover:text-brand-brown text-xl">✕</button>
@@ -251,7 +282,7 @@
                     <span>🛍️</span>
                     <span>上架全新商品至官網</span>
                 </h3>
-                <p class="text-xs text-brand-muted mt-1">填寫商品資訊與圖片，發布後將同步連動至前台官網 (index.html) 與庫存系統 (inventory.html)</p>
+                <p class="text-xs text-brand-muted mt-1">填寫商品資訊與圖片，發布後將同步連動至前台官網 (index.html)</p>
             </div>
 
             <form onsubmit="handleAddProductSubmit(event)" class="space-y-4 text-xs">
@@ -341,6 +372,16 @@
         let currentPeriod = 'daily';
         let uploadedImageBase64 = ''; // 暫存上傳圖片的 Base64
 
+        // 預設商品清單
+        const defaultProducts = [
+            { id: 1, name: "【客製刺繡】涼夏風兒輕輕吹口水巾", price: 430, category: "bib", badge: "熱銷組", icon: "🧣", image: "", stock: 15 },
+            { id: 2, name: "【客製刺繡-3件組】我和寶寶的第一場初雪彌月禮盒", price: 1290, category: "gift", badge: "經典禮盒", icon: "🎁", image: "", stock: 8 },
+            { id: 3, name: "【客製刺繡】花海野餐蕾絲荷葉奶嘴夾", price: 170, category: "accessories", badge: "手作限定", icon: "📎", image: "", stock: 25 },
+            { id: 4, name: "優雅公主復古蕾絲髮帶 3件組", price: 190, category: "accessories", badge: "人氣單品", icon: "🎀", image: "", stock: 30 },
+            { id: 5, name: "【客製刺繡】我愛我的生日兔子寶寶六層紗手帕", price: 210, category: "bib", badge: "親膚推薦", icon: "🐰", image: "", stock: 6 },
+            { id: 6, name: "【客製刺繡-2件組】小天使與小惡魔立體翅膀口水巾", price: 830, category: "gift", badge: "彌月首選", icon: "👼", image: "", stock: 3 }
+        ];
+
         // 預設示範訂單數據
         const defaultOrders = [
             { id: 'COT-2026080701', date: '2026-08-07', name: '陳雅婷 媽媽', items: '【客製刺繡】涼夏風兒輕輕吹口水巾 x 2', custom: '7-11 超取 / 信用卡', price: 860, status: '🪡 刺繡製作中' },
@@ -353,23 +394,24 @@
         window.addEventListener('DOMContentLoaded', () => {
             detectAndDisplayUrls();
 
-            // 監聽 localStorage 變動：當顧客在 index.html 視窗下單時，即時觸發更新
+            // 監聽 localStorage 變動：當顧客在 index.html 視窗下單或變動庫存時，即時觸發更新
             window.addEventListener('storage', (e) => {
                 if (e.key === 'coteacote_orders') {
                     document.getElementById('live-order-alert').classList.remove('hidden');
                     loadDashboardData();
                 }
+                if (e.key === 'coteacote_inventory') {
+                    renderInventoryManageTable();
+                }
             });
         });
 
         function detectAndDisplayUrls() {
-            // 自動計算對應的前台官網 URL
             const currentOrigin = window.location.origin;
             const currentPath = window.location.pathname;
             const frontendPath = currentPath.replace(/admin\.html.*$/, 'index.html');
             const fullFrontendUrl = currentOrigin + frontendPath;
 
-            // 更新介面顯示
             const hostEl = document.getElementById('current-host-url');
             if (hostEl) hostEl.innerText = fullFrontendUrl;
 
@@ -401,22 +443,27 @@
             if (liveTimer) clearInterval(liveTimer);
         }
 
+        function getStoredInventory() {
+            const stored = localStorage.getItem('coteacote_inventory');
+            if (stored) {
+                try { return JSON.parse(stored); } catch(e) {}
+            }
+            localStorage.setItem('coteacote_inventory', JSON.stringify(defaultProducts));
+            return defaultProducts;
+        }
+
         function getStoredOrders() {
             const stored = localStorage.getItem('coteacote_orders');
             if (stored) {
-                try {
-                    return JSON.parse(stored);
-                } catch(e) {
-                    console.error("解析 orders 失敗", e);
-                }
+                try { return JSON.parse(stored); } catch(e) {}
             }
-            // 若尚無資料，寫入預設示範訂單
             localStorage.setItem('coteacote_orders', JSON.stringify(defaultOrders));
             return defaultOrders;
         }
 
         function initDashboard() {
             loadDashboardData();
+            renderInventoryManageTable(); // 渲染商品下架/管理列表
             renderPopularChart();
             renderRegionalChart();
             startLiveSimulation();
@@ -427,6 +474,79 @@
             renderOrdersTable(orders);
             updateKPIs(orders);
             renderRevenueChart(currentPeriod, orders);
+        }
+
+        // 📦 渲染【商品管理/下架表單】
+        function renderInventoryManageTable() {
+            const tbody = document.getElementById('inventory-manage-table-body');
+            const inventory = getStoredInventory();
+
+            if (!inventory || inventory.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="6" class="p-6 text-center text-gray-400">目前尚無商品，請點擊「上架新商品」新增。</td></tr>`;
+                return;
+            }
+
+            const catMap = { bib: '口水巾', gift: '彌月禮盒', accessories: '配件' };
+
+            tbody.innerHTML = inventory.map(item => {
+                const stock = Number(item.stock) || 0;
+                const media = item.image 
+                    ? `<img src="${item.image}" class="w-10 h-10 object-cover rounded-lg border border-brand-cream">`
+                    : `<span class="text-2xl">${item.icon || '🧸'}</span>`;
+
+                return `
+                    <tr class="hover:bg-brand-bg transition">
+                        <td class="p-3">${media}</td>
+                        <td class="p-3 font-bold text-brand-brown">${item.name}</td>
+                        <td class="p-3 text-gray-500">${catMap[item.category] || item.category}</td>
+                        <td class="p-3 font-mono">NT$ ${item.price}</td>
+                        <td class="p-3 font-mono font-bold ${stock === 0 ? 'text-red-500' : 'text-brand-brown'}">
+                            ${stock === 0 ? '已售罄 (0)' : stock + ' 件'}
+                        </td>
+                        <td class="p-3 text-right space-x-2">
+                            <button onclick="updateStockPrompt(${item.id}, ${stock})" class="text-[11px] bg-brand-card hover:bg-brand-cream text-brand-brown px-2.5 py-1 rounded-md border border-brand-cream transition">
+                                ✏️ 補貨/改庫存
+                            </button>
+                            <button onclick="removeProduct(${item.id}, '${item.name}')" class="text-[11px] bg-red-50 hover:bg-red-100 text-red-600 px-2.5 py-1 rounded-md border border-red-200 font-bold transition">
+                                🗑️ 下架商品
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        // 🗑️ 下架商品功能 (徹底從清單刪除)
+        function removeProduct(id, name) {
+            if (confirm(`確定要下架並徹底刪除「${name}」嗎？\n下架後前台官網 (index.html) 將不會再顯示該商品。`)) {
+                let inventory = getStoredInventory();
+                inventory = inventory.filter(p => p.id !== id);
+                localStorage.setItem('coteacote_inventory', JSON.stringify(inventory));
+                window.dispatchEvent(new Event('storage'));
+                renderInventoryManageTable();
+                showToast(`商品「${name}」已成功下架！`);
+            }
+        }
+
+        // ✏️ 修改商品庫存 (若設為 0 前台會顯示已售罄)
+        function updateStockPrompt(id, currentStock) {
+            const input = prompt(`請輸入新的庫存數量：`, currentStock);
+            if (input !== null) {
+                const newStock = parseInt(input);
+                if (!isNaN(newStock) && newStock >= 0) {
+                    let inventory = getStoredInventory();
+                    const target = inventory.find(p => p.id === id);
+                    if (target) {
+                        target.stock = newStock;
+                        localStorage.setItem('coteacote_inventory', JSON.stringify(inventory));
+                        window.dispatchEvent(new Event('storage'));
+                        renderInventoryManageTable();
+                        showToast(`已更新「${target.name}」的庫存為 ${newStock} 件。`);
+                    }
+                } else {
+                    alert("請輸入有效的庫存數字 (大於或等於 0)！");
+                }
+            }
         }
 
         function updateKPIs(orders) {
@@ -636,23 +756,9 @@
             const badge = document.getElementById('new-prod-badge').value.trim() || "新品上架";
             const icon = document.getElementById('new-prod-icon').value;
 
-            // 1. 取得現有庫存與商品清單
-            const defaultProducts = [
-                { id: 1, name: "【客製刺繡】涼夏風兒輕輕吹口水巾", price: 430, category: "bib", badge: "熱銷組", icon: "🧣", image: "", stock: 15 },
-                { id: 2, name: "【客製刺繡-3件組】我和寶寶的第一場初雪彌月禮盒", price: 1290, category: "gift", badge: "經典禮盒", icon: "🎁", image: "", stock: 8 },
-                { id: 3, name: "【客製刺繡】花海野餐蕾絲荷葉奶嘴夾", price: 170, category: "accessories", badge: "手作限定", icon: "📎", image: "", stock: 25 },
-                { id: 4, name: "優雅公主復古蕾絲髮帶 3件組", price: 190, category: "accessories", badge: "人氣單品", icon: "🎀", image: "", stock: 30 },
-                { id: 5, name: "【客製刺繡】我愛我的生日兔子寶寶六層紗手帕", price: 210, category: "bib", badge: "親膚推薦", icon: "🐰", image: "", stock: 6 },
-                { id: 6, name: "【客製刺繡-2件組】小天使與小惡魔立體翅膀口水巾", price: 830, category: "gift", badge: "彌月首選", icon: "👼", image: "", stock: 3 }
-            ];
+            let inventory = getStoredInventory();
 
-            let inventory = defaultProducts;
-            try {
-                const stored = localStorage.getItem('coteacote_inventory');
-                if (stored) inventory = JSON.parse(stored);
-            } catch(err) { inventory = defaultProducts; }
-
-            // 2. 生成新商品 ID
+            // 生成新商品 ID
             const newId = inventory.length > 0 ? Math.max(...inventory.map(p => Number(p.id) || 0)) + 1 : 1;
 
             const newProduct = {
@@ -662,21 +768,21 @@
                 category: category,
                 badge: badge,
                 icon: icon,
-                image: uploadedImageBase64, // 寫入圖片資料（Base64 字串）
+                image: uploadedImageBase64,
                 stock: stock
             };
 
             inventory.unshift(newProduct);
 
-            // 3. 寫回 localStorage 並廣播通知其他分頁（官網 index.html 與 庫存管理 inventory.html）
+            // 寫回 localStorage 並廣播通知其他分頁 (index.html)
             localStorage.setItem('coteacote_inventory', JSON.stringify(inventory));
             window.dispatchEvent(new Event('storage'));
 
-            // 4. 重置表單與關閉彈窗
+            // 重置表單、更新後台表格與關閉彈窗
             e.target.reset();
             closeAddProductModal();
+            renderInventoryManageTable();
 
-            // 5. 提示成功訊息
             showToast(`成功上架商品「${name}」！官網 (index.html) 已同步顯示該商品。`);
         }
 
