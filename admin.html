@@ -242,16 +242,16 @@
 
     </main>
 
-    <!-- Add Product Modal -->
+    <!-- Add Product Modal (已加入圖片上傳) -->
     <div id="add-product-modal" class="fixed inset-0 bg-black/40 z-50 hidden flex items-center justify-center p-4 overflow-y-auto">
-        <div class="bg-white rounded-2xl max-w-lg w-full p-6 md:p-8 shadow-2xl relative border border-brand-cream my-8">
+        <div class="bg-white rounded-2xl max-w-lg w-full p-6 md:p-8 shadow-2xl relative border border-brand-cream my-8 max-h-[90vh] overflow-y-auto">
             <button onclick="closeAddProductModal()" class="absolute top-4 right-4 text-gray-400 hover:text-brand-brown text-xl">✕</button>
             <div class="border-b pb-3 mb-5">
                 <h3 class="text-xl font-serif font-bold text-brand-brown flex items-center gap-2">
                     <span>🛍️</span>
                     <span>上架全新商品至官網</span>
                 </h3>
-                <p class="text-xs text-brand-muted mt-1">填寫商品資訊，發布後將同步連動至前台官網 (index.html) 與庫存系統 (inventory.html)</p>
+                <p class="text-xs text-brand-muted mt-1">填寫商品資訊與圖片，發布後將同步連動至前台官網 (index.html) 與庫存系統 (inventory.html)</p>
             </div>
 
             <form onsubmit="handleAddProductSubmit(event)" class="space-y-4 text-xs">
@@ -259,6 +259,20 @@
                     <label class="block font-medium mb-1 text-gray-700">商品名稱 *</label>
                     <input type="text" id="new-prod-name" placeholder="例如：【客製刺繡】法式蕾絲親膚口水巾" required
                            class="w-full px-3 py-2 border border-brand-cream rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-accent">
+                </div>
+
+                <!-- 🖼️ 圖片上傳與預覽區域 -->
+                <div>
+                    <label class="block font-medium mb-1 text-gray-700">商品圖片上傳 (可選)</label>
+                    <div class="flex items-center gap-3">
+                        <input type="file" id="new-prod-image-file" accept="image/*" onchange="previewProductImage(event)"
+                               class="block w-full text-xs text-gray-500 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-bold file:bg-brand-card file:text-brand-brown hover:file:bg-brand-cream transition cursor-pointer">
+                        <button type="button" id="remove-img-btn" onclick="clearProductImage()" class="hidden text-xs text-red-500 hover:underline shrink-0">清除圖片</button>
+                    </div>
+                    <!-- 預覽圖區塊 -->
+                    <div id="img-preview-container" class="mt-2 hidden">
+                        <img id="new-prod-img-preview" src="" alt="商品圖預覽" class="w-24 h-24 object-cover rounded-xl border border-brand-cream shadow-sm">
+                    </div>
                 </div>
 
                 <div class="grid grid-cols-2 gap-3">
@@ -291,7 +305,7 @@
                 </div>
 
                 <div>
-                    <label class="block font-medium mb-1 text-gray-700">代表圖示 / Emojis</label>
+                    <label class="block font-medium mb-1 text-gray-700">代表備用圖示 / Emojis (若無上傳圖片時顯示)</label>
                     <select id="new-prod-icon" class="w-full px-3 py-2 border border-brand-cream rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-accent bg-white text-base">
                         <option value="🧣">🧣 口水巾 / 圍脖</option>
                         <option value="🎁">🎁 經典彌月禮盒</option>
@@ -325,6 +339,7 @@
         let regionalChart = null;
         let liveTimer = null;
         let currentPeriod = 'daily';
+        let uploadedImageBase64 = ''; // 暫存上傳圖片的 Base64
 
         // 預設示範訂單數據
         const defaultOrders = [
@@ -584,6 +599,32 @@
 
         function closeAddProductModal() {
             document.getElementById('add-product-modal').classList.add('hidden');
+            clearProductImage();
+        }
+
+        // 🖼️ 處理圖片選擇與轉 Base64 預覽
+        function previewProductImage(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    uploadedImageBase64 = e.target.result;
+                    const imgPreview = document.getElementById('new-prod-img-preview');
+                    imgPreview.src = uploadedImageBase64;
+                    document.getElementById('img-preview-container').classList.remove('hidden');
+                    document.getElementById('remove-img-btn').classList.remove('hidden');
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        // 🖼️ 清除選擇的圖片
+        function clearProductImage() {
+            uploadedImageBase64 = '';
+            document.getElementById('new-prod-image-file').value = '';
+            document.getElementById('img-preview-container').classList.add('hidden');
+            document.getElementById('remove-img-btn').classList.add('hidden');
+            document.getElementById('new-prod-img-preview').src = '';
         }
 
         function handleAddProductSubmit(e) {
@@ -597,12 +638,12 @@
 
             // 1. 取得現有庫存與商品清單
             const defaultProducts = [
-                { id: 1, name: "【客製刺繡】涼夏風兒輕輕吹口水巾", price: 430, category: "bib", badge: "熱銷組", icon: "🧣", stock: 15 },
-                { id: 2, name: "【客製刺繡-3件組】我和寶寶的第一場初雪彌月禮盒", price: 1290, category: "gift", badge: "經典禮盒", icon: "🎁", stock: 8 },
-                { id: 3, name: "【客製刺繡】花海野餐蕾絲荷葉奶嘴夾", price: 170, category: "accessories", badge: "手作限定", icon: "📎", stock: 25 },
-                { id: 4, name: "優雅公主復古蕾絲髮帶 3件組", price: 190, category: "accessories", badge: "人氣單品", icon: "🎀", stock: 30 },
-                { id: 5, name: "【客製刺繡】我愛我的生日兔子寶寶六層紗手帕", price: 210, category: "bib", badge: "親膚推薦", icon: "🐰", stock: 6 },
-                { id: 6, name: "【客製刺繡-2件組】小天使與小惡魔立體翅膀口水巾", price: 830, category: "gift", badge: "彌月首選", icon: "👼", stock: 3 }
+                { id: 1, name: "【客製刺繡】涼夏風兒輕輕吹口水巾", price: 430, category: "bib", badge: "熱銷組", icon: "🧣", image: "", stock: 15 },
+                { id: 2, name: "【客製刺繡-3件組】我和寶寶的第一場初雪彌月禮盒", price: 1290, category: "gift", badge: "經典禮盒", icon: "🎁", image: "", stock: 8 },
+                { id: 3, name: "【客製刺繡】花海野餐蕾絲荷葉奶嘴夾", price: 170, category: "accessories", badge: "手作限定", icon: "📎", image: "", stock: 25 },
+                { id: 4, name: "優雅公主復古蕾絲髮帶 3件組", price: 190, category: "accessories", badge: "人氣單品", icon: "🎀", image: "", stock: 30 },
+                { id: 5, name: "【客製刺繡】我愛我的生日兔子寶寶六層紗手帕", price: 210, category: "bib", badge: "親膚推薦", icon: "🐰", image: "", stock: 6 },
+                { id: 6, name: "【客製刺繡-2件組】小天使與小惡魔立體翅膀口水巾", price: 830, category: "gift", badge: "彌月首選", icon: "👼", image: "", stock: 3 }
             ];
 
             let inventory = defaultProducts;
@@ -621,6 +662,7 @@
                 category: category,
                 badge: badge,
                 icon: icon,
+                image: uploadedImageBase64, // 寫入圖片資料（Base64 字串）
                 stock: stock
             };
 
