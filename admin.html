@@ -38,7 +38,7 @@
 </head>
 <body class="font-sans antialiased min-h-screen flex flex-col">
 
-    <!-- Auth Lock Screen Modal (Simulated Security Protection) -->
+    <!-- Auth Lock Screen Modal -->
     <div id="auth-overlay" class="fixed inset-0 bg-[#6D5B4F]/90 z-50 flex items-center justify-center p-4 backdrop-blur-md">
         <div class="bg-white rounded-2xl max-w-md w-full p-8 shadow-2xl border border-brand-cream text-center space-y-6">
             <div class="w-16 h-16 bg-brand-card rounded-full flex items-center justify-center mx-auto text-3xl shadow-inner">
@@ -46,7 +46,7 @@
             </div>
             <div>
                 <h2 class="text-2xl font-serif font-bold text-brand-brown">CÔTE À CÔTE 管理系統</h2>
-                <p class="text-xs text-brand-muted mt-1">此頁面為內部營運專用，請輸入管理員密碼</p>
+                <p class="text-xs text-brand-muted mt-1">內部營運專用，請輸入管理員密碼</p>
             </div>
             
             <form onsubmit="verifyAdminPass(event)" class="space-y-4">
@@ -59,8 +59,9 @@
                     驗證身份並開啟後台
                 </button>
             </form>
-            <div class="text-[11px] text-gray-400">
-                💡 建議配合 SSL 安全加密網址 (`https://admin.coteacote.tw`) 使用
+            <div class="text-[11px] text-gray-400 bg-brand-card p-3 rounded-xl border border-brand-cream">
+                🌐 當前伺服器網址：<br>
+                <span id="current-host-url" class="font-mono text-brand-brown font-bold">自動偵測中...</span>
             </div>
         </div>
     </div>
@@ -72,7 +73,9 @@
                 <span class="text-2xl">📊</span>
                 <div>
                     <h1 class="font-serif font-bold text-lg text-brand-brown leading-tight">CÔTE À CÔTE 營運監控中心</h1>
-                    <p class="text-[10px] text-brand-muted">獨立後台網址系統 v2.4 (Real-time Dashboard)</p>
+                    <p class="text-[10px] text-brand-muted truncate max-w-xs sm:max-w-md" id="admin-site-path-info">
+                        站點位址：載入中...
+                    </p>
                 </div>
             </div>
 
@@ -80,16 +83,16 @@
             <div class="flex items-center space-x-4">
                 <div class="hidden sm:flex items-center space-x-2 text-xs bg-emerald-50 text-emerald-700 px-3 py-1.5 rounded-full border border-emerald-200">
                     <span class="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></span>
-                    <span class="font-medium">系統運作中</span>
+                    <span class="font-medium">數據自動連動中</span>
                 </div>
                 
-                <a href="index.html" target="_blank" class="text-xs text-brand-brown hover:text-brand-accent font-medium flex items-center space-x-1 bg-brand-card px-3 py-1.5 rounded-lg border border-brand-cream transition">
+                <a id="link-to-frontend" href="index.html" target="_blank" class="text-xs text-brand-brown hover:text-brand-accent font-medium flex items-center space-x-1 bg-brand-card px-3 py-1.5 rounded-lg border border-brand-cream transition">
                     <span>🛒</span>
                     <span>開啟前台官網</span>
                 </a>
 
                 <button onclick="lockDashboard()" class="text-xs text-gray-500 hover:text-red-600 transition">
-                    🔒 鎖定後台
+                    🔒 鎖定
                 </button>
             </div>
         </div>
@@ -98,6 +101,15 @@
     <!-- Main Content Container -->
     <main id="main-dashboard-content" class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8 hidden">
         
+        <!-- Live Alert Banner -->
+        <div id="live-order-alert" class="hidden bg-amber-50 border border-amber-200 text-amber-800 px-4 py-3 rounded-xl text-xs flex items-center justify-between shadow-sm animate-bounce">
+            <div class="flex items-center space-x-2">
+                <span class="text-lg">🔔</span>
+                <span>收到前台官網最新下單！系統已同步更新營業額與刺繡隊列。</span>
+            </div>
+            <button onclick="document.getElementById('live-order-alert').classList.add('hidden')" class="font-bold text-amber-900">✕</button>
+        </div>
+
         <!-- Real-time KPI Cards -->
         <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
             <!-- Online Users -->
@@ -118,20 +130,19 @@
 
             <!-- Today Sales -->
             <div class="bg-white p-5 rounded-2xl border border-brand-cream shadow-sm hover:shadow-md transition">
-                <div class="text-xs text-brand-muted mb-2 font-medium">今日營業額 (Revenue)</div>
-                <div id="kpi-today-revenue" class="text-3xl font-bold text-brand-brown font-mono">NT$ 21,800</div>
+                <div class="text-xs text-brand-muted mb-2 font-medium">今日累積營業額</div>
+                <div id="kpi-today-revenue" class="text-3xl font-bold text-brand-brown font-mono">NT$ 0</div>
                 <p class="text-xs text-emerald-600 mt-2 flex items-center gap-1">
-                    <span>↑ 32%</span>
-                    <span class="text-gray-400 text-[11px]">已達本日目標 85%</span>
+                    <span id="kpi-revenue-growth">連動官網數據中</span>
                 </p>
             </div>
 
             <!-- Orders Count -->
             <div class="bg-white p-5 rounded-2xl border border-brand-cream shadow-sm hover:shadow-md transition">
-                <div class="text-xs text-brand-muted mb-2 font-medium">今日成交訂單</div>
-                <div id="kpi-today-orders" class="text-3xl font-bold text-brand-brown font-mono">22 筆</div>
+                <div class="text-xs text-brand-muted mb-2 font-medium">前台成交總訂單</div>
+                <div id="kpi-today-orders" class="text-3xl font-bold text-brand-brown font-mono">0 筆</div>
                 <p class="text-xs text-brand-muted mt-2 text-[11px]">
-                    平均客單價 <span class="font-bold text-brand-brown">NT$ 990</span>
+                    平均客單價 <span id="kpi-avg-order-price" class="font-bold text-brand-brown">NT$ 0</span>
                 </p>
             </div>
 
@@ -146,12 +157,12 @@
             </div>
         </div>
 
-        <!-- Section 1: Revenue Analytics Chart -->
+        <!-- Revenue Analytics Chart -->
         <div class="bg-white p-6 rounded-2xl border border-brand-cream shadow-sm">
             <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
                 <div>
                     <h2 class="font-serif font-bold text-lg text-brand-brown">📈 品牌營業額趨勢分析</h2>
-                    <p class="text-xs text-brand-muted mt-0.5">可切換日、月、年維度查看銷售數據走勢</p>
+                    <p class="text-xs text-brand-muted mt-0.5">根據官網實時紀錄與歷史維度自動運算走勢</p>
                 </div>
                 <div class="flex bg-brand-card p-1 rounded-xl border border-brand-cream text-xs">
                     <button id="btn-period-daily" onclick="switchRevenuePeriod('daily')" class="px-4 py-1.5 rounded-lg font-bold bg-brand-accent text-white transition shadow-sm">每日</button>
@@ -164,24 +175,22 @@
             </div>
         </div>
 
-        <!-- Section 2: Two Columns Charts -->
+        <!-- Popular Products & Regional Doughnut -->
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            <!-- Popular Products Ranking -->
             <div class="bg-white p-6 rounded-2xl border border-brand-cream shadow-sm">
                 <div class="mb-4">
                     <h3 class="font-serif font-bold text-base text-brand-brown">👑 顧客喜愛與熱銷商品排行</h3>
-                    <p class="text-xs text-brand-muted">綜合「加入購物車」與「實際下單」喜好數據</p>
+                    <p class="text-xs text-brand-muted">綜合官網「加入購物車」與「實際下單」數據</p>
                 </div>
                 <div class="h-60">
                     <canvas id="popularProductsChart"></canvas>
                 </div>
             </div>
 
-            <!-- Regional Analytics -->
             <div class="bg-white p-6 rounded-2xl border border-brand-cream shadow-sm">
                 <div class="mb-4">
                     <h3 class="font-serif font-bold text-base text-brand-brown">🌍 訪客地區與客群分布</h3>
-                    <p class="text-xs text-brand-muted">主要消費寶媽與贈禮客群城市來源</p>
+                    <p class="text-xs text-brand-muted">官網主要送貨與寶媽客群城市來源</p>
                 </div>
                 <div class="h-60 flex justify-center items-center">
                     <canvas id="regionalDoughnutChart"></canvas>
@@ -189,16 +198,21 @@
             </div>
         </div>
 
-        <!-- Section 3: Live Orders & Custom Embroidery Queue -->
+        <!-- Live Orders Table -->
         <div class="bg-white p-6 rounded-2xl border border-brand-cream shadow-sm">
             <div class="flex items-center justify-between mb-4">
                 <div>
-                    <h3 class="font-serif font-bold text-base text-brand-brown">🪡 最新客製化刺繡訂單處理排程</h3>
-                    <p class="text-xs text-brand-muted">即時監控手作排程與物流出貨狀態</p>
+                    <h3 class="font-serif font-bold text-base text-brand-brown">🪡 最新官網客製化刺繡訂單處理排程</h3>
+                    <p class="text-xs text-brand-muted">實時監控官網（<span id="label-site-domain" class="font-mono text-brand-brown">index.html</span>）顧客下單狀態</p>
                 </div>
-                <button onclick="refreshMockOrders()" class="text-xs bg-brand-card text-brand-brown border border-brand-cream px-3 py-1.5 rounded-lg hover:border-brand-accent transition">
-                    🔄 重新整理
-                </button>
+                <div class="flex items-center space-x-2">
+                    <button onclick="clearAllOrders()" class="text-xs text-red-500 hover:text-red-700 border border-red-200 px-3 py-1.5 rounded-lg transition">
+                        🗑️ 清空測試訂單
+                    </button>
+                    <button onclick="loadDashboardData()" class="text-xs bg-brand-card text-brand-brown border border-brand-cream px-3 py-1.5 rounded-lg hover:border-brand-accent transition">
+                        🔄 手動重新整理
+                    </button>
+                </div>
             </div>
 
             <div class="overflow-x-auto">
@@ -206,10 +220,10 @@
                     <thead>
                         <tr class="border-b border-brand-cream text-brand-muted uppercase bg-brand-bg">
                             <th class="p-3">訂單編號</th>
-                            <th class="p-3">訂購時間</th>
+                            <th class="p-3">訂購日期</th>
                             <th class="p-3">顧客姓名</th>
                             <th class="p-3">訂購商品內容</th>
-                            <th class="p-3">刺繡姓名/字型</th>
+                            <th class="p-3">取件與付款方式</th>
                             <th class="p-3">總金額</th>
                             <th class="p-3">目前進度</th>
                         </tr>
@@ -228,6 +242,49 @@
         let popularChart = null;
         let regionalChart = null;
         let liveTimer = null;
+        let currentPeriod = 'daily';
+
+        // 預設示範訂單數據
+        const defaultOrders = [
+            { id: 'COT-2026080701', date: '2026-08-07', name: '陳雅婷 媽媽', items: '【客製刺繡】涼夏風兒輕輕吹口水巾 x 2', custom: '7-11 超取 / 信用卡', price: 860, status: '🪡 刺繡製作中' },
+            { id: 'COT-2026080702', date: '2026-08-07', name: '林美玲 小姐', items: '【客製刺繡-3件組】初雪彌月禮盒', custom: '全家 超取 / LINE Pay', price: 1290, status: '📦 準備包裝出貨' },
+            { id: 'COT-2026080601', date: '2026-08-06', name: '張哲銘 先生', items: '花海野餐蕾絲荷葉奶嘴夾 x 1', custom: '黑貓宅配 / 信用卡', price: 230, status: '🚚 已發貨' },
+            { id: 'COT-2026080501', date: '2026-08-05', name: '黃怡君 媽媽', items: '【客製刺繡】立體翅膀口水巾組', custom: '7-11 超取 / 信用卡', price: 830, status: '✅ 已送達完成' }
+        ];
+
+        // 頁面載入時，自動偵測並綁定當前官網網址
+        window.addEventListener('DOMContentLoaded', () => {
+            detectAndDisplayUrls();
+
+            // 監聽 localStorage 變動：當顧客在 index.html 視窗下單時，即時觸發更新
+            window.addEventListener('storage', (e) => {
+                if (e.key === 'coteacote_orders') {
+                    document.getElementById('live-order-alert').classList.remove('hidden');
+                    loadDashboardData();
+                }
+            });
+        });
+
+        function detectAndDisplayUrls() {
+            // 自動計算對應的前台官網 URL
+            const currentOrigin = window.location.origin;
+            const currentPath = window.location.pathname;
+            const frontendPath = currentPath.replace(/admin\.html.*$/, 'index.html');
+            const fullFrontendUrl = currentOrigin + frontendPath;
+
+            // 更新介面顯示
+            const hostEl = document.getElementById('current-host-url');
+            if (hostEl) hostEl.innerText = fullFrontendUrl;
+
+            const pathInfoEl = document.getElementById('admin-site-path-info');
+            if (pathInfoEl) pathInfoEl.innerText = `官網連動位址：${fullFrontendUrl}`;
+
+            const domainLabel = document.getElementById('label-site-domain');
+            if (domainLabel) domainLabel.innerText = fullFrontendUrl;
+
+            const linkFront = document.getElementById('link-to-frontend');
+            if (linkFront) linkFront.href = frontendPath;
+        }
 
         function verifyAdminPass(e) {
             e.preventDefault();
@@ -247,12 +304,43 @@
             if (liveTimer) clearInterval(liveTimer);
         }
 
+        function getStoredOrders() {
+            const stored = localStorage.getItem('coteacote_orders');
+            if (stored) {
+                try {
+                    return JSON.parse(stored);
+                } catch(e) {
+                    console.error("解析 orders 失敗", e);
+                }
+            }
+            // 若尚無資料，寫入預設示範訂單
+            localStorage.setItem('coteacote_orders', JSON.stringify(defaultOrders));
+            return defaultOrders;
+        }
+
         function initDashboard() {
-            renderRevenueChart('daily');
+            loadDashboardData();
             renderPopularChart();
             renderRegionalChart();
-            renderOrdersTable();
             startLiveSimulation();
+        }
+
+        function loadDashboardData() {
+            const orders = getStoredOrders();
+            renderOrdersTable(orders);
+            updateKPIs(orders);
+            renderRevenueChart(currentPeriod, orders);
+        }
+
+        function updateKPIs(orders) {
+            const totalRevenue = orders.reduce((sum, o) => sum + (Number(o.price) || 0), 0);
+            const totalCount = orders.length;
+            const avgPrice = totalCount > 0 ? Math.round(totalRevenue / totalCount) : 0;
+
+            document.getElementById('kpi-today-revenue').innerText = `NT$ ${totalRevenue.toLocaleString()}`;
+            document.getElementById('kpi-today-orders').innerText = `${totalCount} 筆`;
+            document.getElementById('kpi-avg-order-price').innerText = `NT$ ${avgPrice.toLocaleString()}`;
+            document.getElementById('kpi-revenue-growth').innerText = `已連動 ${totalCount} 筆前台訂單`;
         }
 
         function startLiveSimulation() {
@@ -265,10 +353,11 @@
                     const newCount = Math.max(15, current + change);
                     el.innerText = `${newCount} 人`;
                 }
-            }, 3000);
+            }, 3500);
         }
 
         function switchRevenuePeriod(period) {
+            currentPeriod = period;
             ['daily', 'monthly', 'yearly'].forEach(p => {
                 const btn = document.getElementById(`btn-period-${p}`);
                 if (p === period) {
@@ -277,20 +366,22 @@
                     btn.className = "px-4 py-1.5 rounded-lg font-bold text-brand-brown hover:text-brand-accent transition";
                 }
             });
-            renderRevenueChart(period);
+            renderRevenueChart(period, getStoredOrders());
         }
 
-        function renderRevenueChart(period) {
+        function renderRevenueChart(period, orders) {
             const ctx = document.getElementById('mainRevenueChart').getContext('2d');
             if (revenueChart) revenueChart.destroy();
 
             let labels = [], data = [];
+            const liveTotal = orders.reduce((sum, o) => sum + (Number(o.price) || 0), 0);
+
             if (period === 'daily') {
-                labels = ['08/01', '08/02', '08/03', '08/04', '08/05', '08/06', '今日 (08/07)'];
-                data = [12400, 15800, 14200, 19500, 16800, 21000, 21800];
+                labels = ['08/02', '08/03', '08/04', '08/05', '08/06', '今日 (08/07)'];
+                data = [12400, 15800, 14200, 19500, 21000, Math.max(liveTotal, 18500)];
             } else if (period === 'monthly') {
                 labels = ['3月', '4月', '5月', '6月', '7月', '8月 (本月)'];
-                data = [280000, 320000, 410000, 390000, 480000, 520000];
+                data = [280000, 320000, 410000, 390000, 480000, 480000 + liveTotal];
             } else {
                 labels = ['2023 年', '2024 年', '2025 年', '2026 年 (預估)'];
                 data = [1850000, 3200000, 4850000, 6200000];
@@ -377,30 +468,31 @@
             });
         }
 
-        const mockOrders = [
-            { id: 'COT-2026080701', time: '14:25', name: '陳雅婷 媽媽', items: '【客製刺繡】涼夏風兒輕輕吹口水巾 x 2', custom: 'Baby Charlotte (Sauber Script)', price: 860, status: '🪡 刺繡製作中' },
-            { id: 'COT-2026080702', time: '13:10', name: '林美玲 小姐', items: '【客製刺繡-3件組】初雪彌月禮盒', custom: '寶寶小美 (手札體)', price: 1290, status: '📦 準備包裝出貨' },
-            { id: 'COT-2026080703', time: '11:45', name: '張哲銘 先生', items: '花海野餐蕾絲荷葉奶嘴夾 x 1', custom: '無客製', price: 170, status: '🚚 已交寄 7-11' },
-            { id: 'COT-2026080704', time: '09:30', name: '黃怡君 媽媽', items: '【客製刺繡】立體翅膀口水巾組', custom: 'Baby Oliver (BM Yeonsung)', price: 830, status: '✅ 已完成送達' }
-        ];
-
-        function renderOrdersTable() {
+        function renderOrdersTable(orders) {
             const tbody = document.getElementById('orders-table-body');
-            tbody.innerHTML = mockOrders.map(o => `
+            if (!orders || orders.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="7" class="p-6 text-center text-gray-400">尚無前台訂單紀錄，可至官網 (index.html) 模擬下單。</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = orders.map(o => `
                 <tr class="hover:bg-brand-bg transition">
                     <td class="p-3 font-mono font-bold text-brand-brown">${o.id}</td>
-                    <td class="p-3 text-gray-500">${o.time}</td>
-                    <td class="p-3 font-medium">${o.name}</td>
+                    <td class="p-3 text-gray-500">${o.date || '2026-08-07'}</td>
+                    <td class="p-3 font-medium">${o.name || '前台顧客'}</td>
                     <td class="p-3 text-gray-700">${o.items}</td>
-                    <td class="p-3 font-serif text-brand-brown">${o.custom}</td>
+                    <td class="p-3 font-serif text-brand-brown">${o.custom || '超商取貨 / 信用卡'}</td>
                     <td class="p-3 font-mono font-bold">NT$ ${o.price}</td>
-                    <td class="p-3 font-bold text-brand-accent">${o.status}</td>
+                    <td class="p-3 font-bold text-brand-accent">${o.status || '🪡 刺繡製作中'}</td>
                 </tr>
             `).join('');
         }
 
-        function refreshMockOrders() {
-            renderOrdersTable();
+        function clearAllOrders() {
+            if (confirm("確定要清空測試訂單並還原預設值嗎？")) {
+                localStorage.removeItem('coteacote_orders');
+                loadDashboardData();
+            }
         }
     </script>
 </body>
